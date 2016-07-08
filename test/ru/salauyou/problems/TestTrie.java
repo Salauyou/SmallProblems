@@ -4,8 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import ru.salauyou.problems.Trie.CharEntry;
 
 public class TestTrie {
 
@@ -22,6 +30,7 @@ public class TestTrie {
   @Before
   public void initTrie() {
     t = new Trie<>();
+    t.put("", 0);
     t.put("ONE", 1);
     t.put("TWO", 2);
     t.put("THREE", 3);
@@ -32,6 +41,7 @@ public class TestTrie {
   
   @Test
   public void testPutGet() {
+    assertEquals((Integer) 0, t.get(""));
     assertEquals((Integer) 1, t.get("ONE"));
     assertEquals((Integer) 2, t.get("TWO"));
     assertEquals((Integer) 3, t.get("THREE"));
@@ -74,6 +84,39 @@ public class TestTrie {
     assertNull(sub.get("S"));
   }
   
+  
+  @Test
+  public void testTries() {
+    Iterable<CharEntry<Trie<Integer>>> it = t.tries();
+    assertEquals(Arrays.asList('O', 'T'), mapAndCollect(it, CharEntry::getChar));
+    for (CharEntry<Trie<Integer>> e : t.tries()) {
+      switch (e.getChar()) {
+      case 'O' : 
+        assertEquals((Integer) 1, e.getValue().get("NE"));
+        assertEquals((Integer) 100, e.getValue().get("NEHUNDRED"));
+        assertEquals(Arrays.asList('N'), 
+            mapAndCollect(e.getValue().tries(), CharEntry::getChar));
+        break;
+      case 'T':
+        assertEquals((Integer) 2, e.getValue().get("WO"));
+        assertEquals((Integer) 3, e.getValue().get("HREE"));
+        assertEquals((Integer) 2000, e.getValue().get("WOTHOUSAND"));
+        assertEquals(Arrays.asList('H', 'W'), 
+            mapAndCollect(e.getValue().tries(), CharEntry::getChar));
+        break;
+      default:
+        break;
+      }
+    }
+  }
+  
+  
+  static <E, R> List<R> mapAndCollect(Iterable<E> it, Function<E, R> mapper) {
+    return StreamSupport.stream(it.spliterator(), false)
+        .map(mapper)
+        .sorted()
+        .collect(Collectors.toList());
+  }
   
   
 }
