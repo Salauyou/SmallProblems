@@ -40,6 +40,7 @@ public class EditDistance {
           int start, int maxDist, List<T> matches, int[] r) {
     int len = text.length();
     if (r[len] <= maxDist) {
+      addNotNull(matches, dict.get(""));  // add root value
     }
     for (CharEntry<Trie<T>> ce : dict.tries()) {
       int[] t = new int[len + 1];
