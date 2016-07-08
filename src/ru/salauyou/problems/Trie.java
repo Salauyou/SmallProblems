@@ -22,8 +22,10 @@ public class Trie<V> {
     return old;
   }
  
+  
   public V get(String key) {
-    return key == null ? null : find(key, 0);
+    return key == null ? null 
+        : (key.isEmpty() ? value : find(key, 0));
   } 
   
   

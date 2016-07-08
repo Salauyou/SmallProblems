@@ -10,7 +10,8 @@ public class MergeSort {
   }
   
   
-  public static <E extends Comparable<? super E>> void bottomUpSort(E[] input) {
+  public static <E extends Comparable<? super E>> 
+          void bottomUpSort(E[] input) {
     int len = input.length;
     int bits = 32 - Integer.numberOfLeadingZeros(len);
     for (int b = 0; b < bits; b++) {
@@ -19,7 +20,9 @@ public class MergeSort {
         if (start >= len) {
           break;
         }
-        merge(input, start, Math.min(len, (p + 2) << b), Math.min(len, (p + 1) << b));
+        merge(input, start, 
+            Math.min(len, (p + 2) << b), 
+            Math.min(len, (p + 1) << b));
       }
     }
   }
