@@ -86,10 +86,10 @@ public class Trie<V> {
   
   
   public Iterable<CharEntry<Trie<V>>> tries() {
+    if (next == null) {
+      return Collections.emptyList();
+    }
     return () -> {
-      if (next == null) {
-        return Collections.emptyIterator();
-      }
       return new Iterator<CharEntry<Trie<V>>>() {
         final Iterator<Entry<Character, Trie<V>>> it 
             = next.entrySet().iterator();
