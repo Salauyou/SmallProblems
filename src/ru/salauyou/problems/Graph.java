@@ -28,6 +28,9 @@ public class Graph<N> {
     return Collections.unmodifiableSet(edges.keySet());
   }
   
+  /**
+   * Returns all nodes adjusted to a given node
+   */
   public Set<N> adjacentTo(N node) {
     Set<N> adj = edges.get(node);
     return adj == null ? Collections.emptySet() 
