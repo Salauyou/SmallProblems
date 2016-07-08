@@ -10,13 +10,11 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestEditDistance {
 
   @Test
-  @Ignore
   public void testEditDistance() {
     assertEquals(0, EditDistance.editDistance("ABC", "ABC", 5));
     assertEquals(0, EditDistance.editDistance("", "", 5));
@@ -33,7 +31,6 @@ public class TestEditDistance {
   
   
   @Test
-  @Ignore
   public void testDictionarySearch() {
     List<String> entries = Arrays.asList("one", "once", "two", "three", 
         "onehundred", "twothousand", "pi", "pizza");
@@ -63,28 +60,38 @@ public class TestEditDistance {
         c.incrementAndGet(); });
     System.out.format("%s words read\n\n", c.get());
     
-    final int limit = 2;
+    final int limit = 3;
     final List<String> words 
         = Arrays.asList("parti", "neede", "frygally", "frutsration");
-    for (String needle : words) {
-      List<String> matches;
-      matches = EditDistance.findMatches(mapDict, "dummy", 2);
-      matches = EditDistance.findMatches(trieDict, "dummy", 2); // warm-up
-      
-      long ts;
-      ts = System.nanoTime();
-      matches = EditDistance.findMatches(trieDict, needle, limit);
-      Collections.sort(matches);
-      ts = System.nanoTime() - ts;
-      System.out.format("Trie: %6d µs, matches: %s\n", 
-          TimeUnit.NANOSECONDS.toMicros(ts), matches);
-      
-      ts = System.nanoTime();
-      matches = EditDistance.findMatches(mapDict, needle, limit);
-      Collections.sort(matches);
-      ts = System.nanoTime() - ts;
-      System.out.format("Map:  %6d µs, matches: %s\n\n", 
-          TimeUnit.NANOSECONDS.toMicros(ts), matches);
+    
+    final int repeats = 5;
+    for (int i = 0; i < repeats; i++) {
+      for (String needle : words) {
+        List<String> matches;
+        matches = EditDistance.findMatches(mapDict, "dummy" + i, 2);
+        matches = EditDistance.findMatches(trieDict, "dummy" + i, 2); // warm-up
+
+        long ts;
+        System.gc();
+        ts = System.nanoTime();
+        matches = EditDistance.findMatches(trieDict, needle, limit);
+        Collections.sort(matches);
+        ts = System.nanoTime() - ts;
+        if (i == repeats - 1) {
+          System.out.format("Trie: %6d µs, matches: %s\n", 
+              TimeUnit.NANOSECONDS.toMicros(ts), matches);
+        }
+        
+        System.gc();
+        ts = System.nanoTime();
+        matches = EditDistance.findMatches(mapDict, needle, limit);
+        Collections.sort(matches);
+        ts = System.nanoTime() - ts;
+        if (i == repeats - 1) {
+          System.out.format("Map:  %6d µs, matches: %s\n\n", 
+              TimeUnit.NANOSECONDS.toMicros(ts), matches);
+        }
+      }
     }
   }
   
