@@ -12,6 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
+import ru.iitdgroup.lingutil.collect.SimpleTrie;
+import ru.iitdgroup.lingutil.search.EditDistance;
+
 public class TestEditDistance {
 
   @Test
@@ -36,7 +39,7 @@ public class TestEditDistance {
         "onehundred", "twothousand", "pi", "pizza");
     
     Map<String, String> dictMap = new HashMap<>();
-    Trie<String> dictTrie = new Trie<String>();
+    SimpleTrie<String> dictTrie = new SimpleTrie<String>();
     entries.forEach(s -> { dictMap.put(s, s); dictTrie.put(s, s); });
     
     List<String> matches = EditDistance.findMatches(dictMap, "one", 1);
@@ -51,7 +54,7 @@ public class TestEditDistance {
   
   @Test
   public void testLargeDictionary() {
-    final Trie<String> trieDict = new Trie<>();
+    final SimpleTrie<String> trieDict = new SimpleTrie<>();
     final Map<String, String> mapDict = new HashMap<>();
     final AtomicInteger c = new AtomicInteger();
     DictionaryReader.readWords(w -> { 

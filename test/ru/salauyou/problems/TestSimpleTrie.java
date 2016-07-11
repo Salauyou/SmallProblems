@@ -13,23 +13,25 @@ import java.util.stream.StreamSupport;
 import org.junit.Before;
 import org.junit.Test;
 
-import ru.salauyou.problems.Trie.CharEntry;
+import ru.iitdgroup.lingutil.collect.CharEntry;
+import ru.iitdgroup.lingutil.collect.SimpleTrie;
 
-public class TestTrie {
+
+public class TestSimpleTrie {
 
   @Test
   public void testTrieCreate() {
-    Trie<Integer> t = new Trie<>();
+    SimpleTrie<Integer> t = new SimpleTrie<>();
     assertNotNull(t);
   }
   
   
-  Trie<Integer> t;
+  SimpleTrie<Integer> t;
   
   
   @Before
   public void initTrie() {
-    t = new Trie<>();
+    t = new SimpleTrie<>();
     t.put("", 0);
     t.put("ONE", 1);
     t.put("TWO", 2);
@@ -66,7 +68,7 @@ public class TestTrie {
     assertNull(t.trieFor("ONEHUNDREDS"));
     assertNull(t.trieFor("ONETWO"));
     
-    Trie<Integer> sub = t.trieFor("ON");
+    SimpleTrie<Integer> sub = t.trieFor("ON");
     assertEquals((Integer) 1, sub.get("E"));
     assertEquals((Integer) 100, sub.get("EHUNDRED"));
     assertNull(sub.get("ONE"));
@@ -87,9 +89,9 @@ public class TestTrie {
   
   @Test
   public void testTries() {
-    Iterable<CharEntry<Trie<Integer>>> it = t.tries();
+    Iterable<CharEntry<SimpleTrie<Integer>>> it = t.tries();
     assertEquals(Arrays.asList('O', 'T'), mapAndCollect(it, CharEntry::getChar));
-    for (CharEntry<Trie<Integer>> e : t.tries()) {
+    for (CharEntry<SimpleTrie<Integer>> e : t.tries()) {
       switch (e.getChar()) {
       case 'O' : 
         assertEquals((Integer) 1, e.getValue().get("NE"));
