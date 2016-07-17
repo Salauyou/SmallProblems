@@ -2,6 +2,7 @@ package ru.salauyou.problems;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,13 +58,13 @@ public class TestEditDistance {
     final SimpleTrie<String> trieDict = new SimpleTrie<>();
     final Map<String, String> mapDict = new HashMap<>();
     final AtomicInteger c = new AtomicInteger();
-    DictionaryReader.readWords(w -> { 
+    DictionaryReader.readWords(Paths.get("words355.txt"), w -> { 
         trieDict.put(w, w); 
         mapDict.put(w, w); 
         c.incrementAndGet(); });
     System.out.format("%s words read\n\n", c.get());
     
-    final int limit = 3;
+    final int limit = 2;
     final List<String> words 
         = Arrays.asList("parti", "neede", "frygally", "frutsration");
     
