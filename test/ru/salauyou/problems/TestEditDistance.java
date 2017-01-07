@@ -66,7 +66,7 @@ public class TestEditDistance {
     
     final int limit = 2;
     final List<String> words 
-        = Arrays.asList("parti", "neede", "frygally", "frutsration");
+        = Arrays.asList("dummy", "parti", "neede", "frygally", "frutsration");
     
     final int repeats = 5;
     for (int i = 0; i < repeats; i++) {
