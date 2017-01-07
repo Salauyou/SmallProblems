@@ -33,7 +33,7 @@ public final class TreeHelper {
     Map<E, Integer> d = Maps.newHashMap();
 
     for (E e : graph.keySet()) {
-      Collection<? extends E> vs = graph.get(e);
+      Collection<E> vs = graph.get(e);
       d.put(e, vs.size());
       for (E v : vs) {
         if (!d.containsKey(v)) {
