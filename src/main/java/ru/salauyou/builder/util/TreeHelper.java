@@ -27,9 +27,9 @@ public final class TreeHelper {
       Multimap<E, E> graph) {
 
     // initialize
-    // reversed edges
+    // edges directed in reverse (i. e. value -> key)
     Multimap<E, E> m = HashMultimap.create();
-    // 'current' degree
+    // d(e) - current outcoming degree of vertex e
     Map<E, Integer> d = Maps.newHashMap();
 
     for (E e : graph.keySet()) {
@@ -42,7 +42,7 @@ public final class TreeHelper {
         m.put(v, e);
       }
     }
-    // vertices with degree 0
+    // vertices with d = 0
     Queue<E> c = Lists.newLinkedList();
     for (Map.Entry<E, Integer> e : d.entrySet()) {
       if (e.getValue() == 0) {
@@ -50,7 +50,12 @@ public final class TreeHelper {
       }
     }
 
-    // process
+    // process:
+    // take a vertex with d = 0, add it into 
+    // list and decrease d of vertices connected
+    // through incoming egdes (like we remove 
+    // incoming edges); repeat while such 
+    // vertices exist
     List<E> r = Lists.newArrayList();
     E e;
     while ((e = c.poll()) != null) {
@@ -59,13 +64,14 @@ public final class TreeHelper {
       for (E v : m.get(e)) {
         int deg = d.get(v);
         if (deg == 1) {
-          c.offer(v);
+          c.add(v);
           d.remove(v);
         } else {
           d.put(v, deg - 1);
         }
       }
     }
+    // check if all vertices encountered
     if (!d.isEmpty()) {
       throw new IllegalArgumentException(
           "Given graph is not a DAG");
