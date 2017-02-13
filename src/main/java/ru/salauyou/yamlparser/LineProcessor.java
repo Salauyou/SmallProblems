@@ -101,17 +101,22 @@ public class LineProcessor implements Processor {
 
   @Override
   public void acceptKey(ItemParser parser, String key) {
+    // close currently opened key if any
+    KeyHandle h = keyHandles.remove(parser);
+    if (h != null) {
+      handler.closeKey(h);
+    }
     // find parent key handle
     KeyHandle parent = null;
     ItemParser p;
     Iterator<ItemParser> it = parsers.descendingIterator();
     while (it.hasNext() && (p = it.next()) != null) {
-      if (p != parser && (parent = keyHandles.get(p)) != null) {
+      if ((parent = keyHandles.get(p)) != null) {
         break;
       }
     }
     // open key in handler
-    KeyHandle h = newHandle(key, parent);
+    h = newHandle(key, parent);
     keyHandles.put(parser, h);
     currentKeyHandle = h;
     if (objHandle == null) {

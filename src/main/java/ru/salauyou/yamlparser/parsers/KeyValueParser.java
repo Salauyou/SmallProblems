@@ -11,8 +11,10 @@ public class KeyValueParser implements ItemParser {
   Processor processor;
   
   boolean spaceMet = true;
+  
+  boolean expectKey = true;
   boolean expectValue = false;
-    
+  
   
   public KeyValueParser(boolean bracketed) {
     this.bracketed = bracketed;
@@ -22,47 +24,55 @@ public class KeyValueParser implements ItemParser {
   @Override
   public ItemParser acceptChar(Processor processor, char c) {
     this.processor = processor;
+    
     if (c == BR && !bracketed) {
-      processor.returnChar();
       return null;
-    } 
-    if (Character.isWhitespace(c)) {
+    
+    } else if (Character.isWhitespace(c)) {
       return this;
-    } 
-    switch (c) {
-    case ':':
-      if (expectValue) {
+    
+    } else if (c == ':') {
+      if (expectKey || expectValue) {
         throwUnexpected(c);
       }
       expectValue = true;
       return this;
 
-    case ',':
-      if (!bracketed || expectValue) {
+    } else if (c == ',') { 
+      if (!bracketed || expectKey || expectValue) {
         throwUnexpected(c);
       }
-      expectValue = false;
+      expectKey = true;
       return this;
 
-    case '}':
-      if (!bracketed || expectValue) {
+    } else if (c == '}') {
+      if (!bracketed || expectKey || expectValue) {
         throwUnexpected(c);
       }
       return null;
 
-    case '{':
+    } else if (c == '{') {
       if (!expectValue) {
         throwUnexpected(c);
       }
+      expectValue = false;
       return new KeyValueParser(true);
+
+    } else if (c == '#') {
+      processor.returnChar();
+      return new SimpleScalarParser(this);
       
-    case '\'':
+    } else if (!expectKey && !expectValue) {
+      throwUnexpected(c);
+      return null;
+      
+    } else if (c == '\'') {
       return new EscapedSingleQuoteParser(this);
-
-    case '"':
+      
+    } else if (c == '"') {
       return new EscapedDoubleQuoteParser(this);
-
-    default:
+      
+    } else {
       processor.returnChar();
       return new SimpleScalarParser(this);
     }
@@ -73,10 +83,11 @@ public class KeyValueParser implements ItemParser {
   public void acceptScalarResult(CharSequence result) {
     if (expectValue) {
       processor.acceptValue(this, result.toString());
-    } else {
+      expectValue = false;
+    } else if (expectKey) {
       processor.acceptKey(this, result.toString());
+      expectKey = false;
     }
-    expectValue = !expectValue;
   }
 
 }
