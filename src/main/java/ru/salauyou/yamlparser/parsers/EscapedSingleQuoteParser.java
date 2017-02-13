@@ -5,8 +5,15 @@ import ru.salauyou.yamlparser.Processor;
 
 public class EscapedSingleQuoteParser implements ItemParser {
 
+  final ItemParser parent;
+  final StringBuilder buffer = new StringBuilder();
+  
   boolean quoteMet = false;
-  StringBuilder buffer = new StringBuilder();
+  
+  
+  EscapedSingleQuoteParser(ItemParser parent) {
+    this.parent = parent;
+  }
   
   @Override
   public ItemParser acceptChar(Processor processor, char c) {
@@ -15,7 +22,7 @@ public class EscapedSingleQuoteParser implements ItemParser {
         buffer.append(c);
         quoteMet = false;
       } else {
-        processor.acceptResult(buffer);
+        parent.acceptScalarResult(buffer);
         processor.returnChar();
         return null;
       }
@@ -28,11 +35,12 @@ public class EscapedSingleQuoteParser implements ItemParser {
     }
     return this;
   }
-
+  
 
   @Override
-  public void acceptResult(Object result) {
-    throw new UnsupportedOperationException();
+  public void acceptScalarResult(CharSequence result) {
+    throw new UnsupportedOperationException(
+        "I don't accept anything!");
   }
 
 }

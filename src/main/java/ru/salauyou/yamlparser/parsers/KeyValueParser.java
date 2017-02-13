@@ -2,37 +2,27 @@ package ru.salauyou.yamlparser.parsers;
 
 import static ru.salauyou.yamlparser.ItemParser.throwUnexpected;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-
 import ru.salauyou.yamlparser.ItemParser;
 import ru.salauyou.yamlparser.Processor;
 
 public class KeyValueParser implements ItemParser {
 
   final boolean bracketed;
+  Processor processor;
   
   boolean spaceMet = true;
-  
-  Map<String, Object> result = Maps.newLinkedHashMap();
-  String key = null;
-
   boolean expectValue = false;
+    
   
   public KeyValueParser(boolean bracketed) {
     this.bracketed = bracketed;
   }
   
-  
+
   @Override
   public ItemParser acceptChar(Processor processor, char c) {
+    this.processor = processor;
     if (c == BR && !bracketed) {
-      if (key != null 
-          && !result.containsKey(key)) {
-        result.put(key, null);
-      }
-      processor.acceptResult(result);
       processor.returnChar();
       return null;
     } 
@@ -41,23 +31,23 @@ public class KeyValueParser implements ItemParser {
     } 
     switch (c) {
     case ':':
-      if (key == null || expectValue) {
+      if (expectValue) {
         throwUnexpected(c);
       }
       expectValue = true;
       return this;
 
     case ',':
-      if (!bracketed || key != null || expectValue) {
+      if (!bracketed || expectValue) {
         throwUnexpected(c);
       }
+      expectValue = false;
       return this;
 
     case '}':
       if (!bracketed || expectValue) {
         throwUnexpected(c);
       }
-      processor.acceptResult(result);
       return null;
 
     case '{':
@@ -67,39 +57,26 @@ public class KeyValueParser implements ItemParser {
       return new KeyValueParser(true);
       
     case '\'':
-      return new EscapedSingleQuoteParser();
+      return new EscapedSingleQuoteParser(this);
 
     case '"':
-      return new EscapedDoubleQuoteParser();
+      return new EscapedDoubleQuoteParser(this);
 
     default:
       processor.returnChar();
-      return new SimpleScalarParser();
+      return new SimpleScalarParser(this);
     }
   }
   
 
   @Override
-  public void acceptResult(Object result) {
-    if (result instanceof CharSequence) {
-      result = result.toString();
-    }
+  public void acceptScalarResult(CharSequence result) {
     if (expectValue) {
-      this.result.put(key, result);
-      key = null;
+      processor.acceptValue(this, result.toString());
     } else {
-      if (result instanceof String) {
-        key = result.toString();
-        if (this.result.containsKey(key)) {
-          throw new IllegalStateException(
-              String.format("Duplicate key '%s'", key));
-        }
-      } else {
-        throw new IllegalStateException(
-            "Only scalar may be a key");
-      }
+      processor.acceptKey(this, result.toString());
     }
-    expectValue = false;
+    expectValue = !expectValue;
   }
 
 }

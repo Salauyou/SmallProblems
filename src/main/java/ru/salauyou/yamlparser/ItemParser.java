@@ -22,7 +22,7 @@ public interface ItemParser {
   /**
    * Accepts result from underlying parser
    */
-  void acceptResult(Object result);
+  void acceptScalarResult(@Nonnull CharSequence result);
   
   
   static void throwUnexpected(char c) {

@@ -17,44 +17,36 @@ public class ParserTests {
 
   @Test
   public void parseSimpleKeyValue() {
-    LineProcessor p = new LineProcessor();
-    Object result = p.parseString("key: value");
+    Object result = doParse("key: value");
     assertEquals(ImmutableMap.of("key", "value"), result);
     
-    p = new LineProcessor();
-    result = p.parseString("key: three word value  #");
+    result = doParse("key: three word value  #");
     assertEquals(ImmutableMap.of("key", "three word value"), result);
     
-    p = new LineProcessor();
-    result = p.parseString("  Complicated#  key  :  More complicated#   value   #  and comment 'as well'");
+    result =  doParse("  Complicated#  key  :  More complicated#   value   #  and comment 'as well'");
     assertEquals(ImmutableMap.of("Complicated#  key", "More complicated#   value"), result);
   }
   
   
   @Test
   public void parseWithSingleQuotes() {
-    LineProcessor p = new LineProcessor();
-    Object result = p.parseString("' key': '  value'  ");
+    Object result = doParse("' key': '  value'  ");
     assertEquals(ImmutableMap.of(" key", "  value"), result);
     
-    p = new LineProcessor();
-    result = p.parseString("'key  ': 'value  '");
+    result = doParse("'key  ': 'value  '");
     assertEquals(ImmutableMap.of("key  ", "value  "), result);
     
-    p = new LineProcessor();
-    result = p.parseString("  'key':'value # with hashes #'   # real comment ###");
+    result = doParse("  'key':'value # with hashes #'   # real comment ###");
     assertEquals(ImmutableMap.of("key", "value # with hashes #"), result);
     
-    p = new LineProcessor();
-    result = p.parseString("key here  :  '  Key''s  value here '  ");
+    result = doParse("key here  :  '  Key''s  value here '  ");
     assertEquals(ImmutableMap.of("key here", "  Key's  value here "), result);
   }
   
   
   @Test
   public void parseObject() {
-    LineProcessor p = new LineProcessor();
-    Object result = p.parseString(
+    Object result = doParse(
         " key1 : {key2 : { key 3: value 3, key 4 :value 4  }, key5 : value5 }");
     Map<String, ?> expected = ImmutableMap.of(
         "key1", ImmutableMap.of(
@@ -86,12 +78,20 @@ public class ParserTests {
     
     for (String line : malformed) {
       try {
-        Object result = new LineProcessor().parseString(line);
+        Object result = doParse(line);
         fail(String.format("'%s': %s", line, result));
       } catch (IllegalStateException e) {
         // okay
       }
     }
+  }
+  
+  
+  static Object doParse(String input) {
+    ObjectHandler h = new MapObjectHandler();
+    LineProcessor p = new LineProcessor(h);
+    p.parseString(input);
+    return h.getResult();
   }
   
   

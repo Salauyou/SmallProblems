@@ -5,10 +5,17 @@ import ru.salauyou.yamlparser.Processor;
 
 public class SimpleScalarParser implements ItemParser {
 
-  StringBuilder buffer = new StringBuilder();
+  final ItemParser parent;
+  final StringBuilder buffer = new StringBuilder();
   
   boolean spaceMet = true;
   boolean comment = false;
+  
+  
+  SimpleScalarParser(ItemParser parent) {
+    this.parent = parent;
+  }
+  
   
   @Override
   public ItemParser acceptChar(Processor processor, char c) {
@@ -38,14 +45,15 @@ public class SimpleScalarParser implements ItemParser {
   void acceptIfNeeded(Processor processor) {
     String result = buffer.toString().trim();
     if (!result.isEmpty()) {
-      processor.acceptResult(result);
+      parent.acceptScalarResult(result);
     }
   }
-  
-  
+
+
   @Override
-  public void acceptResult(Object result) {
-    throw new UnsupportedOperationException();
+  public void acceptScalarResult(CharSequence result) {
+    throw new UnsupportedOperationException(
+        "I don't accept scalars");
   }
 
 }
