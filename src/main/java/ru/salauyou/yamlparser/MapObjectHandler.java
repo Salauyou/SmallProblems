@@ -8,11 +8,17 @@ import com.google.common.collect.Queues;
 
 public class MapObjectHandler implements ObjectHandler {
   
+  final boolean ignoreParserErrors;
   boolean open = true;
   
   Deque<Map<String, Object>> result = Queues.newArrayDeque();
   Map<String, Object> valueConsumer;
  
+  
+  public MapObjectHandler(boolean ignoreParserErrors) {
+    this.ignoreParserErrors = ignoreParserErrors;
+  }
+  
   
   @Override
   public void openObject(
@@ -55,6 +61,13 @@ public class MapObjectHandler implements ObjectHandler {
 
   @Override
   public void closeKey(KeyHandle key) {
+    // if value has not arrived, put null
+    Object v;
+    if (valueConsumer != null 
+        && (v = valueConsumer.get(key.key())) instanceof Map
+        && ((Map<?,?>) v).isEmpty()) {
+      valueConsumer.put(key.key(), null);
+    }
     result.removeLast();
     valueConsumer = null;
   }
@@ -63,6 +76,15 @@ public class MapObjectHandler implements ObjectHandler {
   @Override
   public Map<String, Object> getResult() {
     return result.peekFirst();
+  }
+
+
+  @Override
+  public void acceptParserError(ParserException error) {
+    if (!ignoreParserErrors) {
+      throw new RuntimeException(
+          error.getDescription().toString(), error);
+    }
   }
   
 }

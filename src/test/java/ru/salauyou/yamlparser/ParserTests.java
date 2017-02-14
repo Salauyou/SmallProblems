@@ -11,6 +11,8 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import ru.salauyou.yamlparser.impl.LineProcessor;
+
 
 
 public class ParserTests {
@@ -80,17 +82,17 @@ public class ParserTests {
       try {
         Object result = doParse(line);
         fail(String.format("'%s': %s", line, result));
-      } catch (IllegalStateException e) {
-        // okay
+      } catch (Exception e) {
+        e.printStackTrace();  // this is okay
       }
     }
   }
   
   
   static Object doParse(String input) {
-    ObjectHandler h = new MapObjectHandler();
+    ObjectHandler h = new MapObjectHandler(false);
     LineProcessor p = new LineProcessor(h);
-    p.parseString(input);
+    p.parse(input);
     return h.getResult();
   }
   

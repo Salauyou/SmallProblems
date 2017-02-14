@@ -1,7 +1,4 @@
-package ru.salauyou.yamlparser.parsers;
-
-import ru.salauyou.yamlparser.ItemParser;
-import ru.salauyou.yamlparser.Processor;
+package ru.salauyou.yamlparser.impl;
 
 public class EscapedDoubleQuoteParser implements ItemParser {
 
@@ -13,7 +10,7 @@ public class EscapedDoubleQuoteParser implements ItemParser {
   
   
   @Override
-  public ItemParser acceptChar(Processor processor, char c) {
+  public ItemParser acceptChar(ProcessorImpl processor, char c) {
     // TODO Auto-generated method stub
     return null;
   }

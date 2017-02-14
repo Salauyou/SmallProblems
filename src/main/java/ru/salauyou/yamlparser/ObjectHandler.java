@@ -16,17 +16,18 @@ public interface ObjectHandler {
   interface ObjectHandle {};
   
   
-  void openObject(@Nonnull ObjectHandle objectHandle, 
+  void openObject(@Nonnull ObjectHandle handle, 
       @Nonnull KeyHandle firstKey);
   
   void closeObject(@Nonnull ObjectHandle objectHandle);
   
   void openKey(@Nonnull KeyHandle key);
   
-  void acceptValue(@Nonnull KeyHandle key, 
-      @Nullable Object value);
+  void acceptValue(@Nonnull KeyHandle key, @Nullable Object value);
   
   void closeKey(@Nonnull KeyHandle key);
+  
+  void acceptParserError(@Nonnull ParserException error);
   
   Object getResult();
  

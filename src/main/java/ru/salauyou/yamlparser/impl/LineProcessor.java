@@ -1,9 +1,11 @@
-package ru.salauyou.yamlparser;
+package ru.salauyou.yamlparser.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Queue;
 
 import javax.annotation.Nonnull;
@@ -11,14 +13,14 @@ import javax.annotation.Nonnull;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
+import ru.salauyou.yamlparser.ObjectHandler;
 import ru.salauyou.yamlparser.ObjectHandler.KeyHandle;
 import ru.salauyou.yamlparser.ObjectHandler.ObjectHandle;
-import ru.salauyou.yamlparser.parsers.KeyValueParser;
+import ru.salauyou.yamlparser.ParserException.Reason;
 
-public class LineProcessor implements Processor {
 
-  final ObjectHandler handler;
-  
+public class LineProcessor extends ProcessorImpl {
+
   Deque<ItemParser> parsers = Queues.newArrayDeque();
   Map<ItemParser, KeyHandle> keyHandles = Maps.newHashMap();
   KeyHandle currentKeyHandle;
@@ -29,14 +31,25 @@ public class LineProcessor implements Processor {
   ObjectHandle objHandle;
   
   
+  public LineProcessor() {}
+  
+  
   public LineProcessor(@Nonnull ObjectHandler handler) {
-    this.handler = Objects.requireNonNull(handler);
+    setObjectHandler(handler);
   }
   
   
-  public void parseString(String input) {
+  @Override
+  public void parse(InputStream input) throws IOException {
+    // TODO: implement
+    throw new UnsupportedOperationException();
+  }
+  
+  
+  @Override
+  public void parse(String input) {
     if (!input.endsWith("\n")) {
-      input += ItemParser.BR;
+      input += '\n';
     }
     // process chars
     for (int i = 0; i < input.length(); ++i) {
@@ -46,9 +59,7 @@ public class LineProcessor implements Processor {
       }
     }
     if (!parsers.isEmpty()) {
-      // TODO: replace by warning
-      throw new IllegalStateException(
-          "Unexpected end of line");
+      acceptParserError(1, 1, Reason.UNEXPECTED_EOL); // TODO: real position
     }
     // close currently open keys
     ItemParser p;
@@ -72,7 +83,15 @@ public class LineProcessor implements Processor {
       parser = new KeyValueParser(false);
       parsers.add(parser);
     }
-    ItemParser res = parser.acceptChar(this, c);
+    ItemParser res = null;
+    try {
+      res = parser.acceptChar(this, c);
+    } catch (ParseException e) {
+      acceptParserError(1, 1, // TODO: real position
+          Reason.UNEXPECTED_SYMBOL, e.getMessage());
+      returnedChars.clear();
+      // TODO: skip line
+    }
     if (res == null) {
       KeyHandle h;
       ItemParser p = parsers.pollLast();
@@ -86,10 +105,9 @@ public class LineProcessor implements Processor {
   
 
   @Override
-  public void returnChars(CharSequence chars) {
-    for (int i = 0; i < chars.length(); ++i) {
-      returnedChars.add(chars.charAt(i));
-    }
+  public void returnChars(int chars) {
+    // TODO: implement
+    throw new UnsupportedOperationException();
   }
   
   
@@ -116,7 +134,7 @@ public class LineProcessor implements Processor {
       }
     }
     // open key in handler
-    h = newHandle(key, parent);
+    h = newKeyHandle(key, parent);
     keyHandles.put(parser, h);
     currentKeyHandle = h;
     if (objHandle == null) {
@@ -140,15 +158,17 @@ public class LineProcessor implements Processor {
   }
 
   
-  static KeyHandle newHandle(final String key, final KeyHandle parent) {
-    return new KeyHandle() {
-      @Override public String key() {
-        return key;
-      }
-      @Override public KeyHandle parent() {
-        return parent;
-      }
-    };
+  @Override
+  public void skipObject() {
+    // TODO: implement
+    throw new UnsupportedOperationException();
+  }
+
+  
+  @Override
+  public void skipAll() {
+    // TODO: implement
+    throw new UnsupportedOperationException();
   }
   
 }

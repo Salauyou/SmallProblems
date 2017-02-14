@@ -1,25 +1,20 @@
 package ru.salauyou.yamlparser;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public interface Processor {
-
-  void acceptKey(@Nonnull ItemParser parser, @Nonnull String key);
   
-  void acceptValue(@Nonnull ItemParser parser, @Nullable Object value);
+  void setObjectHandler(@Nonnull ObjectHandler handler);
   
+  void parse(@Nonnull InputStream input) throws IOException;
   
-  /**
-   * Callback to return back sequence of chars
-   */
-  void returnChars(CharSequence chars);
+  void parse(@Nonnull String input);
   
+  void skipObject();
   
-  /**
-   * Callback to return back next offered char
-   */
-  void returnChar();
-  
+  void skipAll();
   
 }

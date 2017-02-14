@@ -1,6 +1,5 @@
-package ru.salauyou.yamlparser.parsers;
+package ru.salauyou.yamlparser.impl;
 
-import ru.salauyou.yamlparser.ItemParser;
 import ru.salauyou.yamlparser.Processor;
 
 public class SimpleScalarParser implements ItemParser {
@@ -18,8 +17,8 @@ public class SimpleScalarParser implements ItemParser {
   
   
   @Override
-  public ItemParser acceptChar(Processor processor, char c) {
-    if (c == BR) {
+  public ItemParser acceptChar(ProcessorImpl processor, char c) {
+    if (c == '\n') {
       acceptIfNeeded(processor);
       processor.returnChar();
       return null;

@@ -1,11 +1,12 @@
-package ru.salauyou.yamlparser;
+package ru.salauyou.yamlparser.impl;
+
+import java.text.ParseException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public interface ItemParser {
 
-  char BR = '\n';
   
   /**
    * Accepts next char from processor. Returns 
@@ -16,7 +17,7 @@ public interface ItemParser {
    * overlying parser) 
    */
   @Nullable ItemParser acceptChar(
-      @Nonnull Processor processor, char c);
+      @Nonnull ProcessorImpl processor, char c) throws ParseException;
   
   
   /**
@@ -24,10 +25,5 @@ public interface ItemParser {
    */
   void acceptScalarResult(@Nonnull CharSequence result);
   
-  
-  static void throwUnexpected(char c) {
-    throw new IllegalStateException(
-        String.format("Unexpected char '%s'", c));
-  }
   
 }

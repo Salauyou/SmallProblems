@@ -1,14 +1,11 @@
-package ru.salauyou.yamlparser.parsers;
+package ru.salauyou.yamlparser.impl;
 
-import static ru.salauyou.yamlparser.ItemParser.throwUnexpected;
-
-import ru.salauyou.yamlparser.ItemParser;
-import ru.salauyou.yamlparser.Processor;
+import java.text.ParseException;
 
 public class KeyValueParser implements ItemParser {
-
+  
   final boolean bracketed;
-  Processor processor;
+  ProcessorImpl processor;
   
   boolean spaceMet = true;
   
@@ -22,10 +19,10 @@ public class KeyValueParser implements ItemParser {
   
 
   @Override
-  public ItemParser acceptChar(Processor processor, char c) {
+  public ItemParser acceptChar(ProcessorImpl processor, char c) throws ParseException {
     this.processor = processor;
     
-    if (c == BR && !bracketed) {
+    if (c == '\n' && !bracketed) {
       return null;
     
     } else if (Character.isWhitespace(c)) {
@@ -88,6 +85,11 @@ public class KeyValueParser implements ItemParser {
       processor.acceptKey(this, result.toString());
       expectKey = false;
     }
+  }
+  
+  
+  static void throwUnexpected(char c) throws ParseException {
+    throw new ParseException(String.valueOf(c), 0);
   }
 
 }
