@@ -13,7 +13,7 @@ public abstract class ObjectParser {
   protected abstract void go();
   
   
-  protected void throwUnexpected(int c) {
+  protected void reportUnexpected(int c) {
     processor.acceptParserError(
         Reason.UNEXPECTED_SYMBOL, String.valueOf((char) c));
   }
@@ -30,7 +30,7 @@ public abstract class ObjectParser {
         ++i;
       }
       if (strict && c != ' ') {
-        throwUnexpected(c); 
+        reportUnexpected(c); 
       }
     }
     processor.returnChars(1);

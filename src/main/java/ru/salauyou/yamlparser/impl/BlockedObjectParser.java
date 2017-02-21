@@ -51,7 +51,7 @@ public class BlockedObjectParser extends ObjectParser {
             processor.skipLine();
             continue newline;
           } else if (c == '{' || c == '}' || c == ':' || c == ',') {
-            throwUnexpected(c);
+            reportUnexpected(c);
           } else if (c == '\'') {
             key = new PlainParsers.SingleQuoted(processor).parse();
           } else if (c == '"') {
@@ -73,7 +73,7 @@ public class BlockedObjectParser extends ObjectParser {
             processor.acceptParserError(Reason.UNEXPECTED_EOL);
             continue newline;
           } else {
-            throwUnexpected(c);
+            reportUnexpected(c);
             processor.skipLine();
             continue newline;
           }
@@ -97,7 +97,7 @@ public class BlockedObjectParser extends ObjectParser {
             processor.skipLine();
             continue newline;
           } else if (c == '}' || c == ':') {
-            throwUnexpected(c);
+            reportUnexpected(c);
           } else if (c == '{') {
             folderFound = true;
             new FoldedObjectParser(processor).go();
@@ -122,7 +122,7 @@ public class BlockedObjectParser extends ObjectParser {
         if (c < 0) {
           return;
         } else if (c != '\n' && c == '#') {
-          throwUnexpected(c);
+          reportUnexpected(c);
         } else {
           processor.skipLine();
         }
