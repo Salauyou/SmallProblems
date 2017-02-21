@@ -132,8 +132,8 @@ public class BlockedObjectParser extends ObjectParser {
   
   
   boolean checkIntendation(int i) {
-    return i == intendation
-        || (parent != null && i == parent.intendation);
+    return i == intendation || 
+        (parent != null && parent.checkIntendation(i));
   }
   
 
