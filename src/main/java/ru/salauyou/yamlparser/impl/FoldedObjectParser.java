@@ -53,7 +53,7 @@ public class KeyValueParser implements ItemParser {
         throwUnexpected(c);
       }
       expectValue = false;
-      return new KeyValueParser(true);
+      return new BlockedObjectParser(true);
 
     } else if (c == '#') {
       processor.returnChar();
@@ -64,10 +64,10 @@ public class KeyValueParser implements ItemParser {
       return null;
       
     } else if (c == '\'') {
-      return new EscapedSingleQuoteParser(this);
+      return new SingleQuoted(this);
       
     } else if (c == '"') {
-      return new EscapedDoubleQuoteParser(this);
+      return new DoubleQuoted(this);
       
     } else {
       processor.returnChar();

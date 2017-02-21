@@ -32,36 +32,43 @@ public abstract class ProcessorImpl implements Processor {
   
   
   abstract void acceptKey(
-      @Nonnull ItemParser parser, 
+      @Nonnull Object parser, 
       @Nonnull String key);
   
   
   abstract void acceptValue(
-      @Nonnull ItemParser parser, 
+      @Nonnull Object parser, 
       @Nullable Object value);
   
   
   /**
-   * Callback to return back sequence of chars
+   * Returns back given number of chars
    */
   abstract void returnChars(int chars);
 
   
   /**
-   * Callback to return back next offered char
+   * Skips a line
    */
-  abstract void returnChar();
+  abstract void skipLine();
   
   
-  void acceptParserError(int line, int column, Reason reason) {
-    acceptParserError(line, column, reason, null);
+  /**
+   * Returns next char, 
+   * or -1 if no chars left
+   */
+  abstract int nextChar();
+  
+  
+  
+  void acceptParserError(Reason reason) {
+    acceptParserError(reason, null);
   }
   
   
-  void acceptParserError(int line, int column, 
-       Reason reason, String what) {
+  void acceptParserError(Reason reason, String what) {
     handler.acceptParserError(new ParserException(
-        new SimpleDescription(line, column, reason, what)));
+        new SimpleDescription(-1, -1, reason, what))); // TODO: actual line, column
   }
 
   

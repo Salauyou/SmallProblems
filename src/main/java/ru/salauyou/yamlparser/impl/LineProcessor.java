@@ -80,7 +80,7 @@ public class LineProcessor extends ProcessorImpl {
   void processChar(char c) {
     ItemParser parser = parsers.peekLast();
     if (parser == null) {
-      parser = new KeyValueParser(false);
+      parser = new BlockedObjectParser(false);
       parsers.add(parser);
     }
     ItemParser res = null;
