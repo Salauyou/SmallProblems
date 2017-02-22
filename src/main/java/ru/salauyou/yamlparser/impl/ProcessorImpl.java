@@ -32,12 +32,12 @@ public abstract class ProcessorImpl implements Processor {
   
   
   abstract void acceptKey(
-      @Nonnull Object parser, 
+      @Nonnull ObjectParser parser, 
       @Nonnull String key);
   
   
   abstract void acceptValue(
-      @Nonnull Object parser, 
+      @Nonnull ObjectParser parser, 
       @Nullable Object value);
   
   

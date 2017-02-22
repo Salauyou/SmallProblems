@@ -56,7 +56,7 @@ public class PlainParsers {
         } else if (c == '\'') {
           quoteMet = true;
         } else if (c > 0x1f) {
-          buffer.append(c);
+          buffer.append((char) c);
         }
       }
       processor.acceptParserError(
@@ -91,7 +91,7 @@ public class PlainParsers {
           // TODO: fold multiple whitespaces into ' '
           spaceMet = Character.isWhitespace(c);
           if (c > 0x1f) {
-            buffer.append(c);
+            buffer.append((char) c);
           }
         }
       }

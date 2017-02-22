@@ -33,6 +33,7 @@ public class FoldedObjectParser extends ObjectParser {
         } else if (c == '"') {
           key = new PlainParsers.DoubleQuoted(processor).parse();
         } else {
+          processor.returnChars(1);
           key = new PlainParsers.Scalar(processor).parse();
         }
       }
@@ -106,10 +107,10 @@ public class FoldedObjectParser extends ObjectParser {
       } else if (c == separator) {
         return true;
       } else {
-        reportUnexpected(c);
         if (c == '}') {
           return false;
         }
+        reportUnexpected(c);
       }
     }
   }

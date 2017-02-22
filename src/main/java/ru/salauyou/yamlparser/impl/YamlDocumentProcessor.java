@@ -2,7 +2,6 @@ package ru.salauyou.yamlparser.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,25 +15,27 @@ import com.google.common.collect.Queues;
 import ru.salauyou.yamlparser.ObjectHandler;
 import ru.salauyou.yamlparser.ObjectHandler.KeyHandle;
 import ru.salauyou.yamlparser.ObjectHandler.ObjectHandle;
-import ru.salauyou.yamlparser.ParserException.Reason;
 
 
-public class LineProcessor extends ProcessorImpl {
+public class YamlDocumentProcessor extends ProcessorImpl {
 
-  Deque<ItemParser> parsers = Queues.newArrayDeque();
-  Map<ItemParser, KeyHandle> keyHandles = Maps.newHashMap();
+  Deque<ObjectParser> parsers = Queues.newArrayDeque();
+  Map<ObjectParser, KeyHandle> keyHandles = Maps.newHashMap();
   KeyHandle currentKeyHandle;
   
   Queue<Character> returnedChars = Queues.newArrayDeque();
+  Deque<Character> processedChars = Queues.newArrayDeque();
   
   Character current;
   ObjectHandle objHandle;
   
+  String input;
+  int cursor = -1;
   
-  public LineProcessor() {}
+  public YamlDocumentProcessor() {}
   
   
-  public LineProcessor(@Nonnull ObjectHandler handler) {
+  public YamlDocumentProcessor(@Nonnull ObjectHandler handler) {
     setObjectHandler(handler);
   }
   
@@ -47,22 +48,18 @@ public class LineProcessor extends ProcessorImpl {
   
   
   @Override
-  public void parse(String input) {
+  public void parse(String source) {
+    input = source;
     if (!input.endsWith("\n")) {
       input += '\n';
     }
-    // process chars
-    for (int i = 0; i < input.length(); ++i) {
-      processChar(current = input.charAt(i));
-      while ((current = returnedChars.poll()) != null) {
-        processChar(current);
-      }
-    }
-    if (!parsers.isEmpty()) {
-      acceptParserError(1, 1, Reason.UNEXPECTED_EOL); // TODO: real position
-    }
+    
+    // parse using blocked parser
+    parsers.addLast(new BlockedObjectParser(this, null, 0));
+    parsers.peekLast().go();
+    
     // close currently open keys
-    ItemParser p;
+    ObjectParser p;
     KeyHandle h;
     while ((p = parsers.pollLast()) != null) {
       if ((h = keyHandles.get(p)) != null) {
@@ -77,48 +74,42 @@ public class LineProcessor extends ProcessorImpl {
   }
 
   
-  void processChar(char c) {
-    ItemParser parser = parsers.peekLast();
-    if (parser == null) {
-      parser = new BlockedObjectParser(false);
-      parsers.add(parser);
-    }
-    ItemParser res = null;
-    try {
-      res = parser.acceptChar(this, c);
-    } catch (ParseException e) {
-      acceptParserError(1, 1, // TODO: real position
-          Reason.UNEXPECTED_SYMBOL, e.getMessage());
-      returnedChars.clear();
-      // TODO: skip line
-    }
-    if (res == null) {
-      KeyHandle h;
-      ItemParser p = parsers.pollLast();
-      if ((h = keyHandles.remove(p)) != null) {
-        handler.closeKey(h);
-      }
-    } else if (res != parser) {
-      parsers.add(res);
-    }
-  }
-  
-
   @Override
-  public void returnChars(int chars) {
-    // TODO: implement
-    throw new UnsupportedOperationException();
-  }
-  
-  
-  @Override
-  public void returnChar() {
-    returnedChars.add(current);
+  void skipLine() {
+    int c;
+    while ((c = nextChar()) >= 0 && c != '\n');
   }
 
 
   @Override
-  public void acceptKey(ItemParser parser, String key) {
+  int nextChar() {
+    if (!returnedChars.isEmpty()) {
+      processedChars.addLast(returnedChars.poll());
+      return processedChars.peekLast();
+    } 
+    if (input.length() <= ++cursor) {
+      return -1;
+    } else {
+      processedChars.addLast(input.charAt(cursor));
+      return processedChars.peekLast();
+    }
+  }
+  
+  
+  Deque<Character> toReturn = Queues.newArrayDeque();
+  
+  @Override
+  public void returnChars(int i) {
+    for (; i > 0 && !processedChars.isEmpty(); --i) {
+      toReturn.addFirst(processedChars.pollLast());
+    }
+    returnedChars.addAll(toReturn);
+    toReturn.clear();
+  }
+
+  
+  @Override
+  public void acceptKey(ObjectParser parser, String key) {
     // close currently opened key if any
     KeyHandle h = keyHandles.remove(parser);
     if (h != null) {
@@ -126,8 +117,8 @@ public class LineProcessor extends ProcessorImpl {
     }
     // find parent key handle
     KeyHandle parent = null;
-    ItemParser p;
-    Iterator<ItemParser> it = parsers.descendingIterator();
+    ObjectParser p;
+    Iterator<ObjectParser> it = parsers.descendingIterator();
     while (it.hasNext() && (p = it.next()) != null) {
       if ((parent = keyHandles.get(p)) != null) {
         break;
@@ -135,8 +126,24 @@ public class LineProcessor extends ProcessorImpl {
     }
     // open key in handler
     h = newKeyHandle(key, parent);
-    keyHandles.put(parser, h);
     currentKeyHandle = h;
+    keyHandles.put(parser, h);
+    
+    // try to find parser in stack
+    // closing child parser keys
+    if (parsers.contains(parser)) {
+      it = parsers.descendingIterator();
+      while (it.hasNext() && parser != (p = it.next())) {
+        it.remove();
+        if (keyHandles.containsKey(p)) {
+          handler.closeKey(keyHandles.remove(p));
+        }
+      }
+    } else {
+      parsers.addLast(parser);
+    }
+    
+    // open object if not opened
     if (objHandle == null) {
       objHandle = new ObjectHandle(){};
       handler.openObject(objHandle, h);
@@ -146,7 +153,7 @@ public class LineProcessor extends ProcessorImpl {
 
 
   @Override
-  public void acceptValue(ItemParser parser, Object value) {
+  public void acceptValue(ObjectParser parser, Object value) {
     // values for the same key must be produced 
     // by the same parser, and the key must be 
     // currently open
@@ -170,5 +177,8 @@ public class LineProcessor extends ProcessorImpl {
     // TODO: implement
     throw new UnsupportedOperationException();
   }
+
+
+  
   
 }

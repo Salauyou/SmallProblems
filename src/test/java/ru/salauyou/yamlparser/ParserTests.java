@@ -11,7 +11,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import ru.salauyou.yamlparser.impl.LineProcessor;
+import ru.salauyou.yamlparser.impl.YamlDocumentProcessor;
 
 
 
@@ -25,7 +25,7 @@ public class ParserTests {
     result = doParse("key: three word value  #");
     assertEquals(ImmutableMap.of("key", "three word value"), result);
     
-    result =  doParse("  Complicated#  key  :  More complicated#   value   #  and comment 'as well'");
+    result =  doParse("Complicated#  key  :  More complicated#   value   #  and comment 'as well'");
     assertEquals(ImmutableMap.of("Complicated#  key", "More complicated#   value"), result);
   }
   
@@ -38,7 +38,7 @@ public class ParserTests {
     result = doParse("'key  ': 'value  '");
     assertEquals(ImmutableMap.of("key  ", "value  "), result);
     
-    result = doParse("  'key':'value # with hashes #'   # real comment ###");
+    result = doParse("'key':'value # with hashes #'   # real comment ###");
     assertEquals(ImmutableMap.of("key", "value # with hashes #"), result);
     
     result = doParse("key here  :  '  Key''s  value here '  ");
@@ -49,7 +49,7 @@ public class ParserTests {
   @Test
   public void parseObject() {
     Object result = doParse(
-        " key1 : {key2 : { key 3: value 3, key 4 :value 4  }, key5 : value5 }");
+        "key1 : {key2 : { key 3: value 3, key 4 :value 4  }, key5 : value5 }");
     Map<String, ?> expected = ImmutableMap.of(
         "key1", ImmutableMap.of(
             "key2", ImmutableMap.of(
@@ -65,18 +65,18 @@ public class ParserTests {
     List<String> malformed = ImmutableList.of(
         "key:: value",
         "key: value { 123 }  ",
-       // "key : {value, another value}",  // FIXME
+        "key : {value, another value}", 
         "{ key }: value",
         "key : value1, value2 ",
         "key: value1, { value2 }",
-        " key : } value",
+        "key : } value",
         "key { : value",
         "key : { key2 : value2, key3: value3",
         "key1, key2 :value",
         "key : value1 : value2  ",
-        "  key { value } : value",
+        "key { value } : value",
         "key:{ key2 :value2 #, key3: value3 } ",
-        " { key1 : value1} : value2");
+        "{ key1 : value1} : value2");
     
     for (String line : malformed) {
       try {
@@ -91,7 +91,7 @@ public class ParserTests {
   
   static Object doParse(String input) {
     ObjectHandler h = new MapObjectHandler(false);
-    LineProcessor p = new LineProcessor(h);
+    YamlDocumentProcessor p = new YamlDocumentProcessor(h);
     p.parse(input);
     return h.getResult();
   }

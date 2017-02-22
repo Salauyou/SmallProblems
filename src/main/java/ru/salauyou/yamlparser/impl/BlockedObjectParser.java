@@ -18,6 +18,17 @@ public class BlockedObjectParser extends ObjectParser {
   @Override
   public void go() {
     newline: for (;;) {
+      
+      // check if not EOL or EOD
+      int c = processor.nextChar();
+      if (c < 0) {
+        return;
+      } else if (c == '\n') {
+        continue newline;
+      } else {
+        processor.returnChars(1);
+      }
+      
       // get intendation and decide
       // who will parse current line
       int i = countSpaces(true);
@@ -38,7 +49,6 @@ public class BlockedObjectParser extends ObjectParser {
 
       // read key
       String key = null;
-      int c;
       while (key == null) {
         c = processor.nextChar();
         if (c < 0) {
@@ -101,12 +111,14 @@ public class BlockedObjectParser extends ObjectParser {
           new FoldedObjectParser(processor).go();
         } else if (c == '\'') {
           value = new PlainParsers.SingleQuoted(processor).parse();
+          found = true;
         } else if (c == '"') {
           value = new PlainParsers.SingleQuoted(processor).parse();
+          found = true;
         } else {
           processor.returnChars(1);
-          found = true;
           value = new PlainParsers.Scalar(processor).parse();
+          found = value != null;
         }
       }
 

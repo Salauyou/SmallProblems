@@ -34,10 +34,13 @@ public abstract class ObjectParser {
     int c = 0, i = 0;
     while ((c = processor.nextChar()) >= 0 && c != '\n') {
       if (Character.isWhitespace(c)) {
-        ++i;
-      }
-      if (strict && c != ' ') {
-        reportUnexpected(c); 
+        if (strict && c != ' ') {
+          reportUnexpected(c);
+        } else {
+          ++i;
+        }
+      } else {
+        break;
       }
     }
     processor.returnChars(1);
