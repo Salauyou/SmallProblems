@@ -50,9 +50,6 @@ public class YamlDocumentProcessor extends ProcessorImpl {
   @Override
   public void parse(String source) {
     input = source;
-    if (!input.endsWith("\n")) {
-      input += '\n';
-    }
     
     // parse using blocked parser
     parsers.addLast(new BlockedObjectParser(this, null, 0));

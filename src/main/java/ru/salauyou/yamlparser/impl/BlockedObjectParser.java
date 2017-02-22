@@ -19,16 +19,6 @@ public class BlockedObjectParser extends ObjectParser {
   public void go() {
     newline: for (;;) {
       
-      // check if not EOL or EOD
-      int c = processor.nextChar();
-      if (c < 0) {
-        return;
-      } else if (c == '\n') {
-        continue newline;
-      } else {
-        processor.returnChars(1);
-      }
-      
       // get intendation and decide
       // who will parse current line
       int i = countSpaces(true);
@@ -41,13 +31,15 @@ public class BlockedObjectParser extends ObjectParser {
           processor.returnChars(i);
           return;
         } else {
-          processor.acceptParserError(Reason.WRONG_INTENDATION);
+          processor.acceptParserError(
+              Reason.WRONG_INTENDATION);
           processor.skipLine();
           continue newline;
         }
       }
 
       // read key
+      int c;
       String key = null;
       while (key == null) {
         c = processor.nextChar();

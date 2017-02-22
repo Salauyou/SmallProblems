@@ -59,8 +59,10 @@ public class PlainParsers {
           buffer.append((char) c);
         }
       }
-      processor.acceptParserError(
-          Reason.MISSING_SYMBOL, "'");
+      if (!quoteMet) {
+        processor.acceptParserError(
+            Reason.MISSING_SYMBOL, "'");
+      }
       return buffer.toString();
     }
   }
@@ -69,7 +71,6 @@ public class PlainParsers {
   static class Scalar extends PlainParser {
     
     boolean spaceMet;
-    boolean comment;
     
     Scalar(ProcessorImpl processor) {
       super(processor);
@@ -82,12 +83,13 @@ public class PlainParsers {
         if (c < 0) {
           return result();
         } else if (spaceMet && c == '#') {
-          comment = true;
+          processor.skipLine();
+          return result();
         } else if (c == '\n' || c == ',' 
             || c == ':' || c == '}' || c == '{') {
           processor.returnChars(1);
           return result();
-        } else if (!comment) {
+        } else {
           // TODO: fold multiple whitespaces into ' '
           spaceMet = Character.isWhitespace(c);
           if (c > 0x1f) {

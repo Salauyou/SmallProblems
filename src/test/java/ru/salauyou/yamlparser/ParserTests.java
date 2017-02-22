@@ -49,7 +49,7 @@ public class ParserTests {
   @Test
   public void parseObject() {
     Object result = doParse(
-        "key1 : {key2 : { key 3: value 3, key 4 :value 4  }, key5 : value5 }");
+        "key1 : {key2 : { key 3: value 3, key 4 :value 4  }, key5 : value5 } ");
     Map<String, ?> expected = ImmutableMap.of(
         "key1", ImmutableMap.of(
             "key2", ImmutableMap.of(
