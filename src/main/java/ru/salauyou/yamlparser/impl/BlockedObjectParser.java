@@ -121,9 +121,10 @@ public class BlockedObjectParser extends ObjectParser {
         c = processor.nextChar();
         if (c < 0) {
           return;
-        } else if (c != '\n' && c == '#') {
+        } else if (c == '#') {
+          processor.skipLine();
+        } else if (c != '\n') {
           reportUnexpected(c);
-        } else {
           processor.skipLine();
         }
       }

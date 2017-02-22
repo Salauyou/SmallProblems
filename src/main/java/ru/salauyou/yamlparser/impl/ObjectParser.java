@@ -23,9 +23,10 @@ public abstract class ObjectParser {
     countSpaces(false);
   }
   
+  
   protected int countSpaces(boolean strict) {
     int c = 0, i = 0;
-    while ((c = processor.nextChar()) >= 0) {
+    while ((c = processor.nextChar()) >= 0 && c != '\n') {
       if (Character.isWhitespace(c)) {
         ++i;
       }
