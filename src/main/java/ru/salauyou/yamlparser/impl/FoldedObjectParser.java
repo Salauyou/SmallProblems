@@ -1,95 +1,120 @@
 package ru.salauyou.yamlparser.impl;
 
-import java.text.ParseException;
+import ru.salauyou.yamlparser.ParserException.Reason;
 
-public class KeyValueParser implements ItemParser {
-  
-  final boolean bracketed;
-  ProcessorImpl processor;
-  
-  boolean spaceMet = true;
-  
-  boolean expectKey = true;
-  boolean expectValue = false;
+public class FoldedObjectParser extends ObjectParser {
   
   
-  public KeyValueParser(boolean bracketed) {
-    this.bracketed = bracketed;
+  protected FoldedObjectParser(ProcessorImpl processor) {
+    super(processor);
   }
+
   
-
   @Override
-  public ItemParser acceptChar(ProcessorImpl processor, char c) throws ParseException {
-    this.processor = processor;
-    
-    if (c == '\n' && !bracketed) {
-      return null;
-    
-    } else if (Character.isWhitespace(c)) {
-      return this;
-    
-    } else if (c == ':') {
-      if (expectKey || expectValue) {
-        throwUnexpected(c);
+  protected void go() {
+    for (;;) {
+      int c;
+      // read key
+      String key = null;
+      while (key == null) {
+        skipSpaces();
+        c = processor.nextChar();
+        if (c < 0) {
+          processor.acceptParserError(Reason.UNEXPECTED_EOL);
+          return;
+        } else if (c == '\n') {
+          continue;
+        } else if (c == '#') {
+          processor.skipLine();
+        } else if (c == '}') {
+          return;
+        } else if (c == ':' || c == '{' || c == ',') {
+          reportUnexpected(c);
+        } else if (c == '\'') {
+          key = new PlainParsers.SingleQuoted(processor).parse();
+        } else if (c == '"') {
+          key = new PlainParsers.DoubleQuoted(processor).parse();
+        } else {
+          key = new PlainParsers.Scalar(processor).parse();
+        }
       }
-      expectValue = true;
-      return this;
-
-    } else if (c == ',') { 
-      if (!bracketed || expectKey || expectValue) {
-        throwUnexpected(c);
+      
+      // read colon separator
+      if (!findSeparator(':')) {
+        return;
       }
-      expectKey = true;
-      return this;
-
-    } else if (c == '}') {
-      if (!bracketed || expectKey || expectValue) {
-        throwUnexpected(c);
+      processor.acceptKey(this, key);
+      
+      // read value
+      boolean found = false;
+      String value = null;
+      while (!found) {
+        skipSpaces();
+        c = processor.nextChar();
+        if (c < 0) {
+          processor.acceptParserError(Reason.UNEXPECTED_EOL);
+          return;
+        } else if (c == '#') {
+          processor.skipLine();
+        } else if (c == '\n') {
+          continue;
+        } else if (c == '}') {
+          return;
+        } else if (c == ',') {
+          found = true;  // null value
+        } else if (c == ':') {
+          reportUnexpected(c);
+        } else if (c == '{') {
+          found = true;
+          new FoldedObjectParser(processor).go();
+        } else if (c == '\'') {
+          value = new PlainParsers.SingleQuoted(processor).parse();
+        } else if (c == '"') {
+          value = new PlainParsers.SingleQuoted(processor).parse();
+        } else {
+          processor.returnChars(1);
+          value = new PlainParsers.Scalar(processor).parse();
+          found = value != null;  // if empty, try on next line
+        }
       }
-      return null;
-
-    } else if (c == '{') {
-      if (!expectValue) {
-        throwUnexpected(c);
+      
+      if (value != null) {
+        processor.acceptValue(this, value);
       }
-      expectValue = false;
-      return new BlockedObjectParser(true);
-
-    } else if (c == '#') {
-      processor.returnChar();
-      return new SimpleScalarParser(this);
       
-    } else if (!expectKey && !expectValue) {
-      throwUnexpected(c);
-      return null;
-      
-    } else if (c == '\'') {
-      return new SingleQuoted(this);
-      
-    } else if (c == '"') {
-      return new DoubleQuoted(this);
-      
-    } else {
-      processor.returnChar();
-      return new SimpleScalarParser(this);
+      // read comma separator
+      if (!findSeparator(',')) {
+        return;
+      }
     }
   }
   
-
-  @Override
-  public void acceptScalarResult(CharSequence result) {
-    if (expectValue) {
-      processor.acceptValue(this, result.toString());
-      expectValue = false;
-    } else if (expectKey) {
-      processor.acceptKey(this, result.toString());
-      expectKey = false;
+  
+  // returns true if separator found,
+  // false if not found (thus parser must exit)
+  boolean findSeparator(char separator) {
+    for (;;) {
+      // need to iterate, because in folded 
+      // object separator may appear on anther line
+      skipSpaces();
+      int c = processor.nextChar();
+      if (c < 0) {
+        processor.acceptParserError(Reason.UNEXPECTED_EOL);
+        return false;
+      } else if (c == '#') {
+        processor.skipLine();
+      } else if (c == '\n') {
+        continue;
+      } else if (c == separator) {
+        return true;
+      } else {
+        reportUnexpected(c);
+        if (c == '}') {
+          return false;
+        }
+      }
     }
   }
   
   
-  static void throwUnexpected(char c) throws ParseException {
-    throw new ParseException(String.valueOf(c), 0);
-  }
-
 }

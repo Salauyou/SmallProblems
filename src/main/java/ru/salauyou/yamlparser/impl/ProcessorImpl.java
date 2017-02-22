@@ -48,14 +48,15 @@ public abstract class ProcessorImpl implements Processor {
 
   
   /**
-   * Skips a line
+   * Discards all chars until next line
+   * break, inculding line break itself
    */
   abstract void skipLine();
   
   
   /**
-   * Returns next char, 
-   * or -1 if no chars left
+   * Returns next char, or -1 if no chars 
+   * left in the current document
    */
   abstract int nextChar();
   
