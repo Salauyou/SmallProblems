@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Queue;
 
 import javax.annotation.Nonnull;
 
@@ -23,14 +22,14 @@ public class YamlDocumentProcessor extends ProcessorImpl {
   Map<ObjectParser, KeyHandle> keyHandles = Maps.newHashMap();
   KeyHandle currentKeyHandle;
   
-  Queue<Character> returnedChars = Queues.newArrayDeque();
+  Deque<Character> returnedChars = Queues.newArrayDeque();
   Deque<Character> processedChars = Queues.newArrayDeque();
   
   Character current;
   ObjectHandle objHandle;
   
   String input;
-  int cursor = -1;
+  
   
   public YamlDocumentProcessor() {}
   
@@ -70,14 +69,14 @@ public class YamlDocumentProcessor extends ProcessorImpl {
     }
   }
 
+
+  int cursor = -1;
+  int line = 1, column = 0;
+  int lastRead = 0;
+  boolean eof = false;
+  static final char BR = '\n';
   
-  @Override
-  void skipLine() {
-    int c;
-    while ((c = nextChar()) >= 0 && c != '\n');
-  }
-
-
+  
   @Override
   int nextChar() {
     if (!returnedChars.isEmpty()) {
@@ -85,23 +84,30 @@ public class YamlDocumentProcessor extends ProcessorImpl {
       return processedChars.peekLast();
     } 
     if (input.length() <= ++cursor) {
-      return -1;
+      if (eof) {
+        return -1;
+      } else {
+        eof = true;
+        lastRead = BR;
+      } 
     } else {
-      processedChars.addLast(input.charAt(cursor));
-      return processedChars.peekLast();
+      ++column;
+      if (lastRead == BR) {
+        ++line;
+        column = 1;
+      }
+      lastRead = input.charAt(cursor);
     }
+    processedChars.addLast((char) lastRead);
+    return lastRead;
   }
   
-  
-  Deque<Character> toReturn = Queues.newArrayDeque();
   
   @Override
   public void returnChars(int i) {
     for (; i > 0 && !processedChars.isEmpty(); --i) {
-      toReturn.addFirst(processedChars.pollLast());
+      returnedChars.addFirst(processedChars.pollLast());
     }
-    returnedChars.addAll(toReturn);
-    toReturn.clear();
   }
 
   
@@ -173,6 +179,20 @@ public class YamlDocumentProcessor extends ProcessorImpl {
   public void skipAll() {
     // TODO: implement
     throw new UnsupportedOperationException();
+  }
+
+
+  @Override
+  int line() {
+    // TODO: consider returned characters
+    return line; 
+  }
+
+
+  @Override
+  int column() {
+    // TODO: consider returned chars
+    return column; 
   }
 
 

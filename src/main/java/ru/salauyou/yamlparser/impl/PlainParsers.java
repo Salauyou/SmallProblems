@@ -84,6 +84,7 @@ public class PlainParsers {
           return result();
         } else if (spaceMet && c == '#') {
           processor.skipLine();
+          processor.returnChars(1);  // keep line break
           return result();
         } else if (c == '\n' || c == ',' 
             || c == ':' || c == '}' || c == '{') {

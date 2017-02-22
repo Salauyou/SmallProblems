@@ -19,9 +19,22 @@ public class BlockedObjectParser extends ObjectParser {
   public void go() {
     newline: for (;;) {
       
-      // get intendation and decide
-      // who will parse current line
-      int i = countSpaces(true);
+      // get intendation of current line
+      int i = processor.countSpaces(true);
+      
+      // should it be skipped?
+      int c;
+      if ((c = processor.nextChar()) < 0) {
+        return;
+      } else {
+        processor.returnChars(1);
+        if (c == '\n' || c == '#') {
+          processor.skipLine();
+          continue newline;
+        }
+      }
+      
+      // decide who will parse it
       if (i > intendation) {
         processor.returnChars(i);
         new BlockedObjectParser(processor, this, i).go();
@@ -39,7 +52,6 @@ public class BlockedObjectParser extends ObjectParser {
       }
 
       // read key
-      int c;
       String key = null;
       while (key == null) {
         c = processor.nextChar();
@@ -63,7 +75,7 @@ public class BlockedObjectParser extends ObjectParser {
       }
 
       // read separator
-      skipSpaces();
+      processor.skipSpaces();
       c = processor.nextChar();
       if (c != ':') {
         if (c < 0) {
@@ -87,7 +99,7 @@ public class BlockedObjectParser extends ObjectParser {
       String value = null;
       boolean found = false;
       while (!found) {
-        skipSpaces();
+        processor.skipSpaces();
         c = processor.nextChar();
         if (c < 0) {
           return;
@@ -120,7 +132,7 @@ public class BlockedObjectParser extends ObjectParser {
       }
 
       // read rest of the line
-      skipSpaces();
+      processor.skipSpaces();
       c = processor.nextChar();
       if (c < 0) {
         return;

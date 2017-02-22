@@ -45,13 +45,6 @@ public abstract class ProcessorImpl implements Processor {
    * Returns back given number of chars
    */
   abstract void returnChars(int chars);
-
-  
-  /**
-   * Discards all chars until next line
-   * break, inculding line break itself
-   */
-  abstract void skipLine();
   
   
   /**
@@ -61,6 +54,53 @@ public abstract class ProcessorImpl implements Processor {
   abstract int nextChar();
   
   
+  /**
+   * Returns number of current 
+   * (last accessed) line
+   */
+  abstract int line();
+  
+  
+  /**
+   * Returns number of current 
+   * (last accessed) column
+   */
+  abstract int column();
+  
+  
+  /**
+   * Discards all chars until next line
+   * break, inculding line break itself
+   */
+  void skipLine() {
+    int c;
+    while ((c = nextChar()) >= 0 && c != '\n');
+  }
+  
+  
+  void skipSpaces() {
+    countSpaces(false);
+  }
+  
+  
+  int countSpaces(boolean strict) {
+    int c = 0, i = 0;
+    while ((c = nextChar()) >= 0) {
+      if (c == '\n' || !Character.isWhitespace(c)) {
+        returnChars(1);
+        return i;
+      } else if (Character.isWhitespace(c)) {
+        if (strict && c != ' ') {
+          acceptParserError(Reason.UNEXPECTED_SYMBOL, 
+              String.valueOf((char) c));
+        } else {
+          ++i;
+        }
+      }
+    }
+    return i;
+  }
+  
   
   void acceptParserError(Reason reason) {
     acceptParserError(reason, null);
@@ -69,7 +109,7 @@ public abstract class ProcessorImpl implements Processor {
   
   void acceptParserError(Reason reason, String what) {
     handler.acceptParserError(new ParserException(
-        new SimpleDescription(-1, -1, reason, what))); // TODO: actual line, column
+        new SimpleDescription(line(), column(), reason, what)));
   }
 
   

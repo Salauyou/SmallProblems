@@ -15,7 +15,7 @@ public class FoldedObjectParser extends ObjectParser {
       // read key
       String key = null;
       while (key == null) {
-        skipSpaces();
+        processor.skipSpaces();
         c = processor.nextChar();
         if (c < 0) {
           reportMissing('}');
@@ -48,7 +48,7 @@ public class FoldedObjectParser extends ObjectParser {
       boolean found = false;
       String value = null;
       while (!found) {
-        skipSpaces();
+        processor.skipSpaces();
         c = processor.nextChar();
         if (c < 0) {
           reportMissing('}');
@@ -95,7 +95,7 @@ public class FoldedObjectParser extends ObjectParser {
     for (;;) {
       // need to iterate, because in folded 
       // object separator may appear on anther line
-      skipSpaces();
+      processor.skipSpaces();
       int c = processor.nextChar();
       if (c < 0) {
         reportMissing(separator);

@@ -25,26 +25,4 @@ public abstract class ObjectParser {
   }
 
   
-  protected void skipSpaces() {
-    countSpaces(false);
-  }
-  
-  
-  protected int countSpaces(boolean strict) {
-    int c = 0, i = 0;
-    while ((c = processor.nextChar()) >= 0) {
-      if (c == '\n' || !Character.isWhitespace(c)) {
-        processor.returnChars(1);
-        return i;
-      } else if (Character.isWhitespace(c)) {
-        if (strict && c != ' ') {
-          reportUnexpected(c);
-        } else {
-          ++i;
-        }
-      }
-    }
-    return i;
-  }
-  
 }
