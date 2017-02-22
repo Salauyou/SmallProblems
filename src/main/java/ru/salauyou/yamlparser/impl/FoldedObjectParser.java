@@ -1,7 +1,5 @@
 package ru.salauyou.yamlparser.impl;
 
-import ru.salauyou.yamlparser.ParserException.Reason;
-
 public class FoldedObjectParser extends ObjectParser {
   
   
@@ -20,7 +18,7 @@ public class FoldedObjectParser extends ObjectParser {
         skipSpaces();
         c = processor.nextChar();
         if (c < 0) {
-          processor.acceptParserError(Reason.UNEXPECTED_EOL);
+          reportMissing('}');
           return;
         } else if (c == '\n') {
           continue;
@@ -52,7 +50,7 @@ public class FoldedObjectParser extends ObjectParser {
         skipSpaces();
         c = processor.nextChar();
         if (c < 0) {
-          processor.acceptParserError(Reason.UNEXPECTED_EOL);
+          reportMissing('}');
           return;
         } else if (c == '#') {
           processor.skipLine();
@@ -99,7 +97,7 @@ public class FoldedObjectParser extends ObjectParser {
       skipSpaces();
       int c = processor.nextChar();
       if (c < 0) {
-        processor.acceptParserError(Reason.UNEXPECTED_EOL);
+        reportMissing(separator);
         return false;
       } else if (c == '#') {
         processor.skipLine();

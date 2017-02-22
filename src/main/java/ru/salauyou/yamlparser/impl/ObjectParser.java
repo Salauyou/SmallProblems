@@ -18,7 +18,13 @@ public abstract class ObjectParser {
         Reason.UNEXPECTED_SYMBOL, String.valueOf((char) c));
   }
   
+  
+  protected void reportMissing(int c) {
+    processor.acceptParserError(
+        Reason.MISSING_SYMBOL, String.valueOf((char) c));
+  }
 
+  
   protected void skipSpaces() {
     countSpaces(false);
   }

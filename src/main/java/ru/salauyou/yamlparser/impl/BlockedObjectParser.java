@@ -65,10 +65,10 @@ public class BlockedObjectParser extends ObjectParser {
       c = processor.nextChar();
       if (c != ':') {
         if (c < 0) {
-          processor.acceptParserError(Reason.UNEXPECTED_EOL);
+          reportMissing(':');
           return;
         } else if (c == '\n') {
-          processor.acceptParserError(Reason.UNEXPECTED_EOL);
+          reportMissing(':');
           continue newline;
         } else {
           reportUnexpected(c);

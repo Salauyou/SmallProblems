@@ -59,7 +59,8 @@ public class PlainParsers {
           buffer.append(c);
         }
       }
-      processor.acceptParserError(Reason.UNEXPECTED_EOL);
+      processor.acceptParserError(
+          Reason.MISSING_SYMBOL, "'");
       return buffer.toString();
     }
   }
@@ -82,10 +83,12 @@ public class PlainParsers {
           return result();
         } else if (spaceMet && c == '#') {
           comment = true;
-        } else if (c == '\n' || c == ',' || c == ':' || c == '}' || c == '{') {
+        } else if (c == '\n' || c == ',' 
+            || c == ':' || c == '}' || c == '{') {
           processor.returnChars(1);
           return result();
         } else if (!comment) {
+          // TODO: fold multiple whitespaces into ' '
           spaceMet = Character.isWhitespace(c);
           if (c > 0x1f) {
             buffer.append(c);
