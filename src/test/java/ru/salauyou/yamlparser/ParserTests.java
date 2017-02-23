@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableMap;
 import ru.salauyou.yamlparser.impl.YamlDocumentProcessor;
 
 
-
 public class ParserTests {
 
   @Test
@@ -59,7 +58,6 @@ public class ParserTests {
             "key5", "value5"));
     assertEquals(expected, result);
   }
-  
   
   
   static final String MIXED_INPUT = Joiner.on('\n').join(
@@ -127,7 +125,7 @@ public class ParserTests {
   
   
   static Object doParse(String input) {
-    ObjectHandler h = new MapObjectHandler(false);
+    ObjectHandler<Map<String, ?>> h = new MapObjectHandler(false);
     YamlDocumentProcessor p = new YamlDocumentProcessor(h);
     p.parse(input);
     return h.getResult();

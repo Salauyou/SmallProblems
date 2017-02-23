@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /**
  * Event-based object handler
  */
-public interface ObjectHandler {
+public interface ObjectHandler<T> {
   
   interface KeyHandle {
     @Nullable String key();
@@ -29,6 +29,6 @@ public interface ObjectHandler {
   
   void acceptParserError(@Nonnull ParserException error);
   
-  Object getResult();
+  T getResult();
  
 }

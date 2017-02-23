@@ -24,5 +24,4 @@ public abstract class ObjectParser {
         Reason.MISSING_SYMBOL, String.valueOf((char) c));
   }
 
-  
 }

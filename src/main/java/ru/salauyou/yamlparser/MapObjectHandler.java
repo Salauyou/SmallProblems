@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
-public class MapObjectHandler implements ObjectHandler {
+public class MapObjectHandler implements ObjectHandler<Map<String, ?>> {
   
   final boolean ignoreParserErrors;
   boolean open = true;
@@ -74,7 +74,10 @@ public class MapObjectHandler implements ObjectHandler {
   
   
   @Override
-  public Map<String, Object> getResult() {
+  public Map<String, ?> getResult() {
+    if (open) {
+      throw new IllegalStateException("Not closed yet");
+    }
     return result.peekFirst();
   }
 

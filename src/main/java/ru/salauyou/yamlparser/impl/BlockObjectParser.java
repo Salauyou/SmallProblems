@@ -2,13 +2,13 @@ package ru.salauyou.yamlparser.impl;
 
 import ru.salauyou.yamlparser.ParserException.Reason;
 
-public class BlockedObjectParser extends ObjectParser {
+public class BlockObjectParser extends ObjectParser {
   
-  final BlockedObjectParser parent;
+  final BlockObjectParser parent;
   final int intendation;
   
-  public BlockedObjectParser(ProcessorImpl processor, 
-      BlockedObjectParser parent, int intendation) {
+  public BlockObjectParser(ProcessorImpl processor, 
+      BlockObjectParser parent, int intendation) {
     super(processor);
     this.parent = parent;
     this.intendation = intendation;
@@ -37,7 +37,7 @@ public class BlockedObjectParser extends ObjectParser {
       // decide who will parse it
       if (i > intendation) {
         processor.returnChars(i);
-        new BlockedObjectParser(processor, this, i).go();
+        new BlockObjectParser(processor, this, i).go();
         continue newline;
       } else if (i < intendation) {
         if (checkIntendation(i)) {
@@ -151,5 +151,4 @@ public class BlockedObjectParser extends ObjectParser {
         (parent != null && parent.checkIntendation(i));
   }
   
-
 }

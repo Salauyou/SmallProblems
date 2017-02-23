@@ -1,12 +1,19 @@
 package ru.salauyou.yamlparser.impl;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
@@ -18,40 +25,62 @@ import ru.salauyou.yamlparser.ObjectHandler.ObjectHandle;
 
 public class YamlDocumentProcessor extends ProcessorImpl {
 
-  Deque<ObjectParser> parsers = Queues.newArrayDeque();
-  Map<ObjectParser, KeyHandle> keyHandles = Maps.newHashMap();
+  final Deque<ObjectParser> parsers = Queues.newArrayDeque();
+  final Map<ObjectParser, KeyHandle> keyHandles = Maps.newHashMap();
+  
   KeyHandle currentKeyHandle;
-  
-  Deque<Character> returnedChars = Queues.newArrayDeque();
-  Deque<Character> processedChars = Queues.newArrayDeque();
-  
-  Character current;
   ObjectHandle objHandle;
   
-  String input;
+  LineIterator lines;
   
   
   public YamlDocumentProcessor() {}
   
   
-  public YamlDocumentProcessor(@Nonnull ObjectHandler handler) {
-    setObjectHandler(handler);
+  public YamlDocumentProcessor(@Nonnull ObjectHandler<?> handler) {
+    setObjectHandler(Objects.requireNonNull(handler));
   }
   
   
   @Override
-  public void parse(InputStream input) throws IOException {
-    // TODO: implement
-    throw new UnsupportedOperationException();
+  public void parse(@Nonnull File input, 
+      @Nullable Charset charset) throws IOException {
+    
+    lines = FileUtils.lineIterator(
+        Objects.requireNonNull(input), 
+        charset == null ? DEFAULT_CHARSET : charset.name());
+    doParse();
+    lines.close();
   }
   
   
   @Override
-  public void parse(String source) {
-    input = source;
+  public void parse(@Nonnull String source) {
+    Objects.requireNonNull(source);
+    lines = new LineIterator(new StringReader(source));
+    doParse();
+    lines.close();
+  }
+  
+  
+  static final int BUFFER_MAX_SIZE = 300;
+  final Deque<Character> returnedChars = Queues.newArrayDeque();
+  final Deque<Character> processedChars = Queues.newArrayDeque();
+
+  String currentLine = "";
+  int line = 0, column = 0;
+  boolean eol = true;
+  
+  
+  void doParse() {
+    // reset
+    currentLine = "";
+    line = 0;
+    column = 0;
+    eol = true;
     
     // parse using blocked parser
-    parsers.addLast(new BlockedObjectParser(this, null, 0));
+    parsers.addLast(new BlockObjectParser(this, null, 0));
     parsers.peekLast().go();
     
     // close currently open keys
@@ -69,37 +98,41 @@ public class YamlDocumentProcessor extends ProcessorImpl {
     }
   }
 
-
-  int cursor = -1;
-  int line = 1, column = 0;
-  int lastRead = 0;
-  boolean eof = false;
-  static final char BR = '\n';
-  
   
   @Override
   int nextChar() {
     if (!returnedChars.isEmpty()) {
-      processedChars.addLast(returnedChars.poll());
-      return processedChars.peekLast();
-    } 
-    if (input.length() <= ++cursor) {
-      if (eof) {
-        return -1;
-      } else {
-        eof = true;
-        lastRead = BR;
-      } 
-    } else {
-      ++column;
-      if (lastRead == BR) {
-        ++line;
-        column = 1;
-      }
-      lastRead = input.charAt(cursor);
+      return addProcessed(returnedChars.poll());
     }
-    processedChars.addLast((char) lastRead);
-    return lastRead;
+    for (;;) {
+      if (column == currentLine.length()) {
+        if (eol) {   // line break processed
+          if (lines.hasNext()) {
+            currentLine = lines.next();
+            eol = false;
+            ++line;
+            column = 0;
+            continue;
+          } else {   // no more lines
+            return -1;
+          }
+        } else {     // line break not processed
+          eol = true;
+          return addProcessed(BR);
+        }
+      } else {
+        return addProcessed(currentLine.charAt(column++));
+      }
+    }
+  }
+  
+  
+  int addProcessed(int c) {
+    processedChars.addLast((char) c);
+    while (processedChars.size() > BUFFER_MAX_SIZE) {
+      processedChars.pollFirst();
+    }
+    return c;
   }
   
   
@@ -182,20 +215,18 @@ public class YamlDocumentProcessor extends ProcessorImpl {
   }
 
 
+  // TODO: count more accurately
+  // considering returned chars
+  
   @Override
   int line() {
-    // TODO: consider returned characters
-    return line; 
+    return line;
   }
-
-
-  @Override
-  int column() {
-    // TODO: consider returned chars
-    return column; 
-  }
-
 
   
+  @Override
+  int column() {
+    return Math.max(1, column - returnedChars.size());
+  }
   
 }

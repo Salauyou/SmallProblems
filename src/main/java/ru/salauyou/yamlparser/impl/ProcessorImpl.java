@@ -5,6 +5,7 @@ import static ru.salauyou.yamlparser.ParserException.Reason.UNEXPECTED_EOL;
 import static ru.salauyou.yamlparser.ParserException.Reason.UNEXPECTED_SYMBOL;
 import static ru.salauyou.yamlparser.ParserException.Reason.WRONG_INTENDATION;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,10 +24,14 @@ import ru.salauyou.yamlparser.Processor;
 
 public abstract class ProcessorImpl implements Processor {
 
-  ObjectHandler handler;
+  ObjectHandler<?> handler;
+  
+  static final int BR = '\n';
+  static final String DEFAULT_CHARSET 
+      = StandardCharsets.UTF_8.name();
   
   @Override
-  public void setObjectHandler(ObjectHandler handler) {
+  public void setObjectHandler(ObjectHandler<?> handler) {
     this.handler = Objects.requireNonNull(handler);
   }
   
@@ -74,7 +79,7 @@ public abstract class ProcessorImpl implements Processor {
    */
   void skipLine() {
     int c;
-    while ((c = nextChar()) >= 0 && c != '\n');
+    while ((c = nextChar()) >= 0 && c != BR);
   }
   
   
@@ -86,7 +91,7 @@ public abstract class ProcessorImpl implements Processor {
   int countSpaces(boolean strict) {
     int c = 0, i = 0;
     while ((c = nextChar()) >= 0) {
-      if (c == '\n' || !Character.isWhitespace(c)) {
+      if (c == BR || !Character.isWhitespace(c)) {
         returnChars(1);
         return i;
       } else if (Character.isWhitespace(c)) {
@@ -131,7 +136,7 @@ public abstract class ProcessorImpl implements Processor {
     
     static final Map<Reason, String> REASONS 
       = ImmutableMap.of(
-          MISSING_SYMBOL, "Missing", 
+          MISSING_SYMBOL, "Missed", 
           UNEXPECTED_SYMBOL, "Unexpected", 
           UNEXPECTED_EOL, "Unexpected EOL",
           WRONG_INTENDATION, "Wrong intendation");
@@ -165,8 +170,6 @@ public abstract class ProcessorImpl implements Processor {
               : String.format("%s '%s'", REASONS.get(reason), what));
       return msg + String.format(" at line %d, column %d", line, column);
     }
-    
-    
   }
   
 }

@@ -1,15 +1,18 @@
 package ru.salauyou.yamlparser;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public interface Processor {
   
-  void setObjectHandler(@Nonnull ObjectHandler handler);
+  void setObjectHandler(@Nonnull ObjectHandler<?> handler);
   
-  void parse(@Nonnull InputStream input) throws IOException;
+  void parse(@Nonnull File input, 
+      @Nullable Charset charset) throws IOException;
   
   void parse(@Nonnull String input);
   
