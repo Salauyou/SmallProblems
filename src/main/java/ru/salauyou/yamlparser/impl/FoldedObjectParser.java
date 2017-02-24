@@ -11,8 +11,9 @@ public class FoldedObjectParser extends ObjectParser {
   @Override
   protected void go() {
     for (;;) {
-      int c;
+      
       // read key
+      int c;
       String key = null;
       while (key == null) {
         processor.skipSpaces();
@@ -89,10 +90,13 @@ public class FoldedObjectParser extends ObjectParser {
   }
   
   
-  // returns true if separator found,
-  // false if not found (thus parser must exit)
+  /** 
+   * Returns true if separator found,
+   * false if not found (thus parser must exit)
+   */
   boolean findSeparator(char separator) {
     for (;;) {
+      
       // need to iterate, because in folded 
       // object separator may appear on anther line
       processor.skipSpaces();

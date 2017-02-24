@@ -19,6 +19,9 @@ public class PlainParsers {
   }
   
   
+  /**
+   * Parser to process double-quoted scalars
+   */
   static class DoubleQuoted extends PlainParser {
 
     DoubleQuoted(ProcessorImpl processor) {
@@ -33,6 +36,9 @@ public class PlainParsers {
   }
   
   
+  /**
+   * Parser to process single-quoted scalars
+   */
   static class SingleQuoted extends PlainParser {
     
     boolean quoteMet = false;
@@ -68,6 +74,9 @@ public class PlainParsers {
   }
   
   
+  /**
+   * Parser to process 'simple' scalars
+   */
   static class Scalar extends PlainParser {
     
     boolean spaceMet;

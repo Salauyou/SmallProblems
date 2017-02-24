@@ -73,6 +73,7 @@ public class YamlDocumentProcessor extends ProcessorImpl {
   
   
   void doParse() {
+    
     // reset
     currentLine = "";
     line = 0;
@@ -90,6 +91,7 @@ public class YamlDocumentProcessor extends ProcessorImpl {
         handler.closeKey(keyHandles.remove(p));
       }
     }
+    
     // close object
     if (objHandle != null) {
       handler.closeObject(objHandle);
@@ -145,42 +147,47 @@ public class YamlDocumentProcessor extends ProcessorImpl {
   
   @Override
   public void acceptKey(ObjectParser parser, String key) {
+    
     // close currently opened key if any
     KeyHandle h = keyHandles.remove(parser);
     if (h != null) {
       handler.closeKey(h);
     }
+    
+    // find or add this parser in the queue
+    // (closing child parsers if any)
+    ObjectParser p;
+    if (parsers.contains(parser)) {
+      while ((p = parsers.peekLast()) != parser) {
+        parsers.pollLast();
+        if ((h = keyHandles.remove(p)) != null) {
+          handler.closeKey(h);
+        }
+      }
+    } else {
+      parsers.addLast(parser);
+    }
+    
     // find parent key handle
     KeyHandle parent = null;
-    ObjectParser p;
     Iterator<ObjectParser> it = parsers.descendingIterator();
     while (it.hasNext() && (p = it.next()) != null) {
       if ((parent = keyHandles.get(p)) != null) {
         break;
       }
     }
-    // open key in handler
+    
+    // create key handle
     h = newKeyHandle(key, parent);
     currentKeyHandle = h;
     keyHandles.put(parser, h);
     
-    // find or add this parser in the queue
-    // (closing child parsers if any)
-    if (parsers.contains(parser)) {
-      while ((p = parsers.peekLast()) != parser) {
-        parsers.pollLast();
-        if (keyHandles.containsKey(p)) {
-          handler.closeKey(keyHandles.remove(p));
-        }
-      }
-    } else {
-      parsers.addLast(parser);
-    }
     // open object if not opened
     if (objHandle == null) {
       objHandle = new ObjectHandle(){};
       handler.openObject(objHandle, h);
     }
+    
     // open key
     handler.openKey(h);
   }
@@ -188,6 +195,7 @@ public class YamlDocumentProcessor extends ProcessorImpl {
 
   @Override
   public void acceptValue(ObjectParser parser, Object value) {
+    
     // values for the same key must be produced 
     // by the same parser, and the key must be 
     // currently open
