@@ -85,10 +85,9 @@ public class YamlDocumentProcessor extends ProcessorImpl {
     
     // close currently open keys
     ObjectParser p;
-    KeyHandle h;
     while ((p = parsers.pollLast()) != null) {
-      if ((h = keyHandles.get(p)) != null) {
-        handler.closeKey(h);
+      if (keyHandles.containsKey(p)) {
+        handler.closeKey(keyHandles.remove(p));
       }
     }
     // close object
@@ -165,12 +164,11 @@ public class YamlDocumentProcessor extends ProcessorImpl {
     currentKeyHandle = h;
     keyHandles.put(parser, h);
     
-    // try to find parser in stack
-    // closing child parser keys
+    // find or add this parser in the queue
+    // (closing child parsers if any)
     if (parsers.contains(parser)) {
-      it = parsers.descendingIterator();
-      while (it.hasNext() && parser != (p = it.next())) {
-        it.remove();
+      while ((p = parsers.peekLast()) != parser) {
+        parsers.pollLast();
         if (keyHandles.containsKey(p)) {
           handler.closeKey(keyHandles.remove(p));
         }
@@ -178,12 +176,12 @@ public class YamlDocumentProcessor extends ProcessorImpl {
     } else {
       parsers.addLast(parser);
     }
-    
     // open object if not opened
     if (objHandle == null) {
       objHandle = new ObjectHandle(){};
       handler.openObject(objHandle, h);
     }
+    // open key
     handler.openKey(h);
   }
 
