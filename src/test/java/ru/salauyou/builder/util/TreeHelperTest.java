@@ -100,7 +100,10 @@ public class TreeHelperTest {
     Collection<String> items;
     Set<String> result;
     
-    items = Arrays.asList("apple", "common", "fruit", "pear");
+    items = Arrays.asList("apple", "pear", "common", "fruit");
+    result = TreeHelper.collectDescendants(items, treeParentExtractor, "fruit");
+    assertEquals(ImmutableSet.of("common", "apple", "pear"), result);
+    
     result = TreeHelper.collectDescendants(items, treeParentExtractor, "fruit");
     assertEquals(ImmutableSet.of("common", "apple", "pear"), result);
     
@@ -112,7 +115,12 @@ public class TreeHelperTest {
     
     result = TreeHelper.collectDescendants(items, treeParentExtractor, "nut");
     assertTrue(result.isEmpty());  // no "nuts" among items
-    
+   
+    // null base
+    items = Arrays.asList("common", "nut", "peanut");
+    result = TreeHelper.collectDescendants(items, treeParentExtractor, null);
+    // 'common' is a child of 'fruit' which is not among items
+    assertEquals(ImmutableSet.of("nut", "peanut"), result);
   }
   
   
