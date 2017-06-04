@@ -4,12 +4,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
+import java.util.Set;
 
+import javax.validation.constraints.NotNull;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 
 public final class TreeHelper {
@@ -81,6 +88,42 @@ public final class TreeHelper {
     }
   }
 
+  
+  public static <E> Set<E> collectDescendants(
+      Collection<? extends E> elements,
+      Function<? super E, ? extends E> parentExtractor,
+      @NotNull E base) {
+    
+    Set<E> elems = Sets.newHashSet(elements);
+    Map<E, E> identities = Maps.toMap(
+        elems, Functions.identity());
+    
+    Set<E> descs = Sets.newHashSet();
+    descs.add(Objects.requireNonNull(base));
+    List<E> d = Lists.newArrayList();
+    
+    for (E e : elements) {
+      d.clear();
+      while (e != null) {
+        if (descs.contains(e)) {
+          descs.addAll(d);
+          break;
+        }
+        // don't walk on wrong branches! 
+        if (!elems.contains(e)) {
+          break;
+        }
+        d.add(identities.get(e));
+        elems.remove(e);   
+        e = parentExtractor.apply(e);
+      }
+    }
+    
+    descs.remove(base);
+    return descs;
+  }
+  
+  
 
   private TreeHelper() {}
   
