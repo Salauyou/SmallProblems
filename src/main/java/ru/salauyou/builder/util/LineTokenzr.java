@@ -32,20 +32,19 @@ public class LineTokenzr {
    * Splits a string into list of tokens by a given separator 
    * char, with respect of quoted tokens and trailing comments. 
    * Size of result is always (n + 1), where n is number of
-   * occurrences of separator char in a string, except quoted 
-   * and commented. Unquoted tokens are trimmed; empty or 
-   * whitespace-only unquoted tokens are considered {@code null}. 
-   * (Thus, tokenizing empty or blank string will result in list 
-   * containing one {@code null} element.)
+   * occurrences of separator char in the string (except quoted 
+   * and commented). Unquoted tokens are trimmed, empty and 
+   * blank unquoted tokens are considered {@code null} (thus, 
+   * tokenizing empty or blank string will produce a list 
+   * containing one {@code null} element).
    * <p>
-   * Trailing comments (followed by {@code //}, or {@code #} 
-   * after whitespace, or {@code #} at the beginning of a line) 
-   * are skipped, unless they are quoted.
+   * Trailing comments (characters following {@code //}, or 
+   * {@code #} after a whitespace, or {@code #} at the beginning 
+   * of the string) are skipped, unless they are quoted.
    * <p>
-   * Quotation style follows Yaml rules. Single-quoted ({@code '})
-   * tokens are parsed literally, the only escape sequence 
-   * is {@code ''} encoding single-quote character. Double-quoted 
-   * ({@code "}) tokens are Java-unescaped after read.
+   * 'Single-quoted' tokens are parsed literally, except 
+   * {@code ''} sequence which is parsed as {@code '} character. 
+   * "Double-quoted" tokens are Java-unescaped after read.
    */
   public static List<String> tokenize(String s, char separator) 
       throws ParseException {
