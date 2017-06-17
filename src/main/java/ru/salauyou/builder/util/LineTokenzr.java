@@ -82,7 +82,8 @@ public class LineTokenzr {
         return result;
       }
       if (s.charAt(i++) != separator) {
-        wrongFormat("Separator " + separator + " not found", i);
+        wrongFormat("Separator " + separator 
+            + " not found after token", i);
       }
     }
   }
@@ -123,7 +124,7 @@ public class LineTokenzr {
     if (quoteMet) {
       return i;
     } else {
-      return wrongFormat("Closing ' not found", i);
+      return wrongFormat("Closing ' is missing", i);
     }
   }
 
@@ -133,12 +134,17 @@ public class LineTokenzr {
     
     for (; i < s.length(); ++i) {
       char c = s.charAt(i);
-      if (c == '"' && s.charAt(i - 1) != '\\') {
-        return i + 1;
+      if (c == '"') {
+        // check if this quote is escaped
+        int k = i;
+        while (s.charAt(--k) == '\\');
+        if ((i - k) % 2 == 1) {
+          return i + 1;
+        }
       }
       sb.append(c);
     }
-    return wrongFormat("Closing \" not found", i);
+    return wrongFormat("Closing \" is missing", i);
   }
 
 
