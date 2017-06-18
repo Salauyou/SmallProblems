@@ -1,28 +1,41 @@
 package ru.salauyou.builder.util;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.collect.Lists;
-
 
 public class LineTokenzr {
 
   
    
+  /**
+   * Extracts a key-value pair from the input string using 
+   * colon separator ({@code :}), or returns {@code null}
+   * if input is {@code null}, or blank, or comment-only.
+   * If input contains only one token, value is considered 
+   * {@code null}
+   * 
+   * @throws ParseException if there is >2 tokens in the 
+   *    string, or key is {@code null}, or format is wrong
+   */
   public static Pair<String, String> keyValue(String s) 
       throws ParseException {
-    List<String> tokens = tokenize(s, ':');
-    if (tokens.isEmpty() || tokens.get(0) == null) {
-      wrongFormat("Key is null", 0);
-    } else if (tokens.size() < 2) {
-      wrongFormat("Key-value separator : is missing", 0);
-    } else if (tokens.size() > 2) {
-      wrongFormat("More than one : separator found", 0);
+    
+    if (s == null) {
+      return null;
+    }
+    List<String> tokens = tokenize(s, ':', 2);
+    if (tokens.get(0) == null) {
+      if (tokens.size() == 1) {
+        return null;
+      } else {
+        wrongFormat("Key is null", 0);
+      }
     }
     return Pair.of(tokens.get(0), tokens.get(1));
   }
@@ -45,11 +58,18 @@ public class LineTokenzr {
    * 'Single-quoted' tokens are parsed literally, except 
    * {@code ''} sequence which is parsed as {@code '} character. 
    * "Double-quoted" tokens are Java-unescaped after read.
+   * <p>
+   * The {@code limit} parameter, if > 0, determines maximum
+   * number of tokens the string may contain: when extra 
+   * separator is found, method will throw {@code ParseException}. 
+   * If {@code limit <= 0}, all tokens will be read.
    */
-  public static List<String> tokenize(String s, char separator) 
+  public static List<String> tokenize(
+      String s, char separator, int limit) 
       throws ParseException {
     
-    List<String> result = Lists.newArrayList();
+    boolean limited = limit > 0;
+    List<String> result = new ArrayList<>();
     int i = 0;
 
     for (;;) {
@@ -75,15 +95,19 @@ public class LineTokenzr {
       // append to result
       result.add(token);
 
-      // expect separator or EOL after token
+      // expect EOL or separator after token
       i = skipSpacesAndComments(s, i);
       if (i >= s.length()) {
         return result;
       }
-      if (s.charAt(i++) != separator) {
-        wrongFormat("Separator " + separator 
-            + " not found after token", i);
+      if (s.charAt(i) != separator) {
+        wrongFormat("Extra characters found after token", i);
       }
+      // check limit
+      if (limited && result.size() == limit) {
+        wrongFormat("Number of tokens exceed limit " + limit, i);
+      }
+      i++; // consume separator
     }
   }
 
@@ -103,9 +127,11 @@ public class LineTokenzr {
   }
 
 
-  static int readSingleQuoted(String s, int i, StringBuilder sb) 
+  // start = first character following a quote
+  static int readSingleQuoted(String s, int start, StringBuilder sb) 
       throws ParseException {
     
+    int i = start;
     boolean quoteMet = false;
     for (; i < s.length(); ++i) {
       char c = s.charAt(i);
@@ -123,14 +149,16 @@ public class LineTokenzr {
     if (quoteMet) {
       return i;
     } else {
-      return wrongFormat("Closing ' is missing", i);
+      return wrongFormat("Closing ' is missing", start - 1);
     }
   }
 
 
-  static int readDoubleQuoted(String s, int i, StringBuilder sb) 
+  // start = first char following a quote
+  static int readDoubleQuoted(String s, int start, StringBuilder sb) 
       throws ParseException {
     
+    int i = start;
     for (; i < s.length(); ++i) {
       char c = s.charAt(i);
       if (c == '"') {
@@ -143,7 +171,7 @@ public class LineTokenzr {
       }
       sb.append(c);
     }
-    return wrongFormat("Closing \" is missing", i);
+    return wrongFormat("Closing \" is missing", start - 1);
   }
 
 

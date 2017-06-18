@@ -1,6 +1,7 @@
 package ru.salauyou.builder.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -64,11 +65,11 @@ public class LineTokenzrTest {
     assertEquals(exp, LineTokenzr.keyValue("*one'two* : 'three*four' "   .replace('*', '"')));
     
     // special case: escaping " and \ in double-quoted
-    // input:  "\" then \\\\\"\\\\" 
+    // input:  "\" then \\\\\"\\\\"  (last quote is unescaped -- closing quote)
     String input = "  *|* then |||||*||||* "  .replace('|', '\\').replace('*', '"');
     // result: " then \\"\\
     String result = "* then ||*||"            .replace('|', '\\').replace('*', '"');
-    assertEquals(Arrays.asList(result), LineTokenzr.tokenize(input, ':'));
+    assertEquals(Arrays.asList(result), LineTokenzr.tokenize(input, ':', 1));
   }
 
 
@@ -89,7 +90,38 @@ public class LineTokenzrTest {
     assertEquals(exp, LineTokenzr.keyValue("''  :**  #some text"    .replace('*', '"')));
     
     exp = Pair.of("one 1", null);
+  }
+  
+  
+  @Test
+  public void testMalformed() {
     
+    // more tokens than limit
+    expectParseError(2, 12, "  one : two : three ");
+    expectParseError(2, 12, "  one : two':'three' ");
+    
+    // extra chars after token
+    expectParseError(0, 12, " 'one':'two'extra :  'three' ");
+    expectParseError(0, 14, "  one :'two'  extra : three  ");
+    
+    // missing closing quote
+    expectParseError(0, 7, " *one*:*two   :  three  "   .replace('*', '"')); 
+    expectParseError(0, 7, " 'one':'two'' :  three  ");                                          // escaped ' 
+    expectParseError(0, 8, "  one : *two|*: 'three' "   .replace('*', '"').replace('|', '\\'));  // escaped "
+    expectParseError(0, 8, "  one : 'two* : *three* "   .replace('*', '"'));                     // misquotation
+    
+  }
+  
+  
+  static void expectParseError(int limit, int expectedOffset, String s) {
+    try {
+      LineTokenzr.tokenize(s, ':', limit);
+      fail();
+    } catch (ParseException pe) {
+      System.out.println("ParseException at " 
+          + pe.getErrorOffset() + " : " + pe.getMessage());
+      assertEquals(expectedOffset, pe.getErrorOffset());
+    }
   }
 
 }
